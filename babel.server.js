@@ -1,5 +1,6 @@
 require('babel/register')({
 	stage: 1,
+  sourceMap: 'inline',
 });
 
 if (process.env.NODE_ENV !== "production") {
