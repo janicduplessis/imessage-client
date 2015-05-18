@@ -1,8 +1,27 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import morgan from 'morgan';
+import nconf from 'nconf';
+import db from 'rethinkdb';
+
+import UserStore from './UserStore';
+
+nconf.argv()
+  .env()
+  .file({file: 'config/server.json'});
+
+const config = {
+  database: {
+    host: nconf.get('db:host'),
+    port: nconf.get('db:port'),
+    authKey: nconf.get('db:authKey'),
+  },
+};
 
 const app = express();
+let userStore = null;
 
+app.use(morgan('dev'));
 app.use('/', express.static('static'));
 app.use(bodyParser.json());
 
@@ -28,26 +47,67 @@ app.get('/', (req, res) => {
   res.send(output);
 });
 
-app.post('/api/login', (req, res) => {
-  let username = req.body.username;
-  let password = req.body.password;
+app.post('/api/login', async (req, res) => {
+  let { username, password } = req.body;
 
-  if(username === 'janic' && password === 'ass') {
-    res.json({
-      result: 'OK',
-      user: {firstName: 'ass', lastName: 'yolo'},
-    });
-  } else {
+  let {user, error} = await userStore.login(username, password);
+  if(error) {
     res.json({
       result: 'INVALID_USER_PASS',
       error: 'Invalid username or password.',
     });
+    return;
   }
+
+  res.json({
+    result: 'OK',
+    user: user,
+    token: 'awdawdwad',
+  });
 });
 
-let server = app.listen(process.env.PORT || 8000, () => {
-  let host = server.address().address;
-  let port = server.address().port;
+app.post('/api/register', (req, res) => {
+  let {
+    username,
+    password,
+    firstName,
+    lastName,
+  } = req.body;
 
-  console.info(`==> ✅  Server is listening\n==> 🌎  Go to http://${host}:${port}`);
+  let {user, error} = userStore.register(username, password, firstName, lastName);
+
+  if(error) {
+    res.json({
+      result: 'ERROR',
+      error: error,
+    });
+    return;
+  }
+
+  res.json({
+    result: 'OK',
+    user: user,
+    token: 'awdawdwad',
+  });
+});
+
+function startServer() {
+  let server = app.listen(process.env.PORT || 8000, () => {
+    let host = server.address().address;
+    let port = server.address().port;
+
+    console.info(`==> ✅  Server is listening\n==> 🌎  Go to http://${host}:${port}`);
+  });
+}
+
+db.connect({
+  host: config.database.host,
+  port: config.database.port,
+  db: 'imessagechat',
+  /*authKey: config.database.authKey,*/
+}).then((conn) => {
+  userStore = new UserStore(conn);
+  startServer();
+}).catch((err) => {
+  console.error(err);
 });

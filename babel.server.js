@@ -1,12 +1,14 @@
+var piping = require('piping');
+
 require('babel/register')({
 	stage: 1,
   sourceMap: 'inline',
 });
 
-if (process.env.NODE_ENV !== "production") {
-  if (!require("piping")({hook: true})) {
-    return;
+if (false && process.env.NODE_ENV !== 'production') {
+  if(piping({hook: true})) {
+    require('./src/server/server');
   }
+} else {
+  require('./src/server/server');
 }
-
-require('./src/server/server');

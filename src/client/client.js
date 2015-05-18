@@ -5,4 +5,3 @@ import routes from './routes';
 Router.run(routes, (Handler) => {
   React.render(<Handler />, document.getElementById('content'));
 });
-

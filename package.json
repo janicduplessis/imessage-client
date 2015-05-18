@@ -6,20 +6,24 @@
   },
   "main": "babel.server.js",
   "scripts": {
-    "start": "NODE_PATH=\"./src\" node ./babel.server",
+    "start": "node ./babel.server",
     "build": "node ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client.js",
     "watch-client": "node ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client-watch.js && node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.client-watch.js",
-    "watch": "node ./node_modules/concurrently/src/main.js --kill-others 'npm run watch-client' 'npm run start'"
+    "watch": "node ./node_modules/concurrently/src/main.js --kill-others \"npm run watch-client\" \"npm run start\""
   },
   "dependencies": {
     "babel": "^5.4.2",
+    "bcryptjs": "^2.1.0",
     "body-parser": "^1.12.4",
     "express": "^4.12.3",
     "flummox": "^4.0.0-alpha2",
     "immutable": "^3.7.2",
+    "morgan": "^1.5.3",
+    "nconf": "^0.7.1",
     "piping": "0.1.8",
     "react": "^0.13.3",
-    "react-router": "^0.13.3"
+    "react-router": "^0.13.3",
+    "rethinkdb": "^2.0.0"
   },
   "devDependencies": {
     "babel-core": "^5.4.2",
