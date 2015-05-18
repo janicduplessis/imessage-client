@@ -42,7 +42,10 @@ class LoginHandler extends React.Component {
 
   _submit(event) {
     event.preventDefault();
-    UserActions.login(this.state.username, this.state.password);
+    UserActions.login({
+      username: this.state.username,
+      password: this.state.password,
+    });
   }
 }
 

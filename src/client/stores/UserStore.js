@@ -7,6 +7,7 @@ class UserStore extends Store {
     super();
 
     this.register(UserActions.login, this._handleLogin);
+    this.register(UserActions.register, this._handleLogin);
 
     this.state = {
       user: null,

@@ -2,12 +2,19 @@ import { Flux, Actions } from '../flux';
 import ApiUtils from '../utils/ApiUtils';
 
 class UserActions extends Actions {
-  async login(username, password) {
+  async login(loginInfo) {
     try {
-      return await ApiUtils.login({username, password});
+      return await ApiUtils.login(loginInfo);
     } catch(error) {
       console.log(error);
-      return null;
+    }
+  }
+
+  async register(registerInfo) {
+    try {
+      return await ApiUtils.register(registerInfo);
+    } catch(error) {
+      console.log(error);
     }
   }
 }

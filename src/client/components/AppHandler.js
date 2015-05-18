@@ -1,8 +1,17 @@
 import React from 'react';
 import { RouteHandler } from 'react-router';
+import NavBar from './NavBar';
 import UserStore from '../stores/UserStore';
 
 class AppHandler extends React.Component {
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      user: null,
+    };
+  }
 
   componentDidMount() {
     UserStore.listen(this._userChanged.bind(this));
@@ -15,6 +24,7 @@ class AppHandler extends React.Component {
   render() {
     return (
       <div>
+        <NavBar user={this.state.user}/>
         <RouteHandler {...this.props} key={this.props.pathname} />
       </div>
     );
@@ -22,11 +32,16 @@ class AppHandler extends React.Component {
 
   _userChanged() {
     let { router } = this.context;
-    if(UserStore.get() !== null) {
+    let user = UserStore.get();
+    if(user !== null) {
       router.replaceWith('/chat');
     } else {
       router.replaceWith('/login');
     }
+
+    this.setState({
+      user: user,
+    });
   }
 }
 
