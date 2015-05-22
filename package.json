@@ -15,7 +15,7 @@
     "babel": "^5.4.2",
     "bcryptjs": "^2.1.0",
     "body-parser": "^1.12.4",
-    "express": "^4.12.3",
+    "express.io": "^1.1.13",
     "flummox": "^4.0.0-alpha2",
     "immutable": "^3.7.2",
     "morgan": "^1.5.3",
