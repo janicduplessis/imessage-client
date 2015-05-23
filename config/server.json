@@ -5,6 +5,7 @@
 		"authKey": ""
 	},
 	"server": {
-		"port": "8000"
+		"port": "8000",
+		"jwtSecret": "ohawdihojwadjipjsepojsef"
 	}
 }

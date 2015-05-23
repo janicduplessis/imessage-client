@@ -1,8 +1,13 @@
-import express from 'express.io';
+import {Server} from 'http';
+import express from 'express';
+import io from 'socket.io';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import nconf from 'nconf';
 import db from 'rethinkdb';
+import jwt from 'jsonwebtoken';
+import expressJwt from 'express-jwt';
+import socketJwt from 'socketio-jwt';
 
 import UserStore from './UserStore';
 import MessageStore from './MessageStore';
@@ -19,16 +24,20 @@ const config = {
   },
   server: {
     port: nconf.get('server:port'),
+    jwtSecret: nconf.get('server:jwtSecret'),
   },
 };
 
+const publicPaths = ['/', '/api/login', '/api/register'];
+
 console.info('Starting iMessage server...\n');
 console.info('Config:');
-console.info('db:', nconf.get('db'));
-console.info('server:', nconf.get('server'), '\n');
+console.info('db:', config.database);
+console.info('server:', config.server, '\n');
 
 const app = express();
-app.http().io();
+const server = new Server(app);
+app.io = io(server);
 
 let userStore = null;
 let messageStore = null;
@@ -36,6 +45,46 @@ let messageStore = null;
 app.use(morgan('dev'));
 app.use('/', express.static('static'));
 app.use(bodyParser.json());
+app.use(expressJwt({secret: config.server.jwtSecret}).unless({path: publicPaths}));
+
+app.io.sockets.on('connection', socketJwt.authorize({
+  secret: config.server.jwtSecret,
+  timeout: 10000,
+})).on('authenticated', (socket) => {
+  console.info('authenticated');
+  const user = socket.decoded_token;
+
+  socket.on('send', (data) => {
+    if(data.type === 'client') {
+      // If we receive a new message from the web client we send it
+      // to the mac client.
+      socket.to(user.id + '-mac').emit('message', data.message);
+    } else {
+      // If we receive a new message from the mac client we save it to
+      // the database. When the database receives new messages it will
+      // notify the web clients via a change handler.
+      messageStore.add(user.id, data.message);
+    }
+  });
+
+  socket.on('ready', (data) => {
+    console.info('ready');
+    if(data.type === 'client') {
+      // Add a web client to the user group.
+      socket.join(user.id + '-client');
+
+      // When the message store receives a new message notify the web clients for
+      // that user.
+      messageStore.addMessageListener(user.id, (message) => {
+        console.log('New message for user:', user.id, message);
+        socket.emit('message', message);
+      });
+    } else {
+      // Add a mac client to the user group.
+      socket.join(user.id + '-mac');
+    }
+  });
+});
 
 /**
  * Index handler.
@@ -51,6 +100,7 @@ app.get('/', (req, res) => {
       </head>
       <body>
         <div id="content"></div>
+        <script src="/socket.io/socket.io.js"></script>
         <script src="${webserver}/dist/client.js"></script>
       </body>
     </html>`
@@ -63,9 +113,9 @@ app.get('/', (req, res) => {
  * Login handler.
  */
 app.post('/api/login', async (req, res) => {
-  let { username, password } = req.body;
+  const { username, password } = req.body;
 
-  let {user, error} = await userStore.login(username, password);
+  const {user, error} = await userStore.login(username, password);
   if(error) {
     res.json({
       result: 'INVALID_USER_PASS',
@@ -74,10 +124,16 @@ app.post('/api/login', async (req, res) => {
     return;
   }
 
+  const token = jwt.sign(user, config.server.jwtSecret);
+
   res.json({
     result: 'OK',
-    user: user,
-    token: 'awdawdwad',
+    user: {
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+    token: token,
   });
 });
 
@@ -85,14 +141,14 @@ app.post('/api/login', async (req, res) => {
  * Register handler.
  */
 app.post('/api/register', (req, res) => {
-  let {
+  const {
     username,
     password,
     firstName,
     lastName,
   } = req.body;
 
-  let {user, error} = userStore.register(username, password, firstName, lastName);
+  const {user, error} = userStore.register(username, password, firstName, lastName);
 
   if(error) {
     res.json({
@@ -102,41 +158,17 @@ app.post('/api/register', (req, res) => {
     return;
   }
 
+  const token = jwt.sign(user, config.server.jwtSecret);
+
   res.json({
     result: 'OK',
-    user: user,
-    token: 'awdawdwad',
+    user: {
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+    token: token,
   });
-});
-
-app.io.route('send', (req) => {
-  if(req.type === 'client') {
-    // If we receive a new message from the web client we send it
-    // to the mac client.
-    req.io.room(req.user.id + '-mac').broadcast('message', req.message);
-  } else {
-    // If we receive a new message from the mac client we save it to
-    // the database. When the database receives new messages it will
-    // notify the web clients via a change handler.
-    messageStore.add(req.user.id, req.message);
-  }
-});
-
-app.io.route('ready', (req) => {
-  if(req.type === 'client') {
-    // Add a web client to the user group.
-    req.io.join(req.user.id + '-client');
-
-    // When the message store receives a new message notify the web clients for
-    // that user.
-    messageStore.addMessageListener(req.user.id, (message) => {
-      console.log('New message for user:', req.user.id, message);
-      req.io.room(req.user.id + '-client').broadcast('message', message);
-    });
-  } else {
-    // Add a mac client to the user group.
-    req.io.join(req.user.id + '-mac');
-  }
 });
 
 (async () => {
@@ -197,7 +229,7 @@ app.io.route('ready', (req) => {
 
   // Start the server.
   console.info(`Starting server on port ${config.server.port}...`);
-  app.listen(config.server.port, () => {
+  server.listen(config.server.port, () => {
     console.info('Server started.');
   });
 })();

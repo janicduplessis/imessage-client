@@ -2,6 +2,7 @@ import React from 'react';
 import { RouteHandler } from 'react-router';
 import NavBar from './NavBar';
 import UserStore from '../stores/UserStore';
+import MessageActions from '../actions/MessageActions';
 
 class AppHandler extends React.Component {
 
@@ -34,6 +35,7 @@ class AppHandler extends React.Component {
     let { router } = this.context;
     let user = UserStore.get();
     if(user !== null) {
+      MessageActions.connect();
       router.replaceWith('/chat');
     } else {
       router.replaceWith('/login');
