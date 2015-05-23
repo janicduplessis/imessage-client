@@ -1,7 +1,11 @@
 {
 	"db": {
 		"host": "192.168.59.103",
-		"port": "32771",
+		"port": "32768",
 		"authKey": ""
+	},
+	"server": {
+		"port": "8000",
+		"jwtSecret": "ohawdihojwadjipjsepojsef"
 	}
 }

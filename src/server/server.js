@@ -1,10 +1,16 @@
+import {Server} from 'http';
 import express from 'express';
+import io from 'socket.io';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import nconf from 'nconf';
 import db from 'rethinkdb';
+import jwt from 'jsonwebtoken';
+import expressJwt from 'express-jwt';
+import socketJwt from 'socketio-jwt';
 
 import UserStore from './UserStore';
+import MessageStore from './MessageStore';
 
 nconf.argv()
   .env()
@@ -16,17 +22,72 @@ const config = {
     port: nconf.get('db:port'),
     authKey: nconf.get('db:authKey'),
   },
+  server: {
+    port: nconf.get('server:port'),
+    jwtSecret: nconf.get('server:jwtSecret'),
+  },
 };
 
+const publicPaths = ['/', '/api/login', '/api/register'];
+
+console.info('Starting iMessage server...\n');
+console.info('Config:');
+console.info('db:', config.database);
+console.info('server:', config.server, '\n');
+
 const app = express();
+const server = new Server(app);
+app.io = io(server);
+
 let userStore = null;
+let messageStore = null;
 
 app.use(morgan('dev'));
 app.use('/', express.static('static'));
 app.use(bodyParser.json());
+app.use(expressJwt({secret: config.server.jwtSecret}).unless({path: publicPaths}));
+
+app.io.sockets.on('connection', socketJwt.authorize({
+  secret: config.server.jwtSecret,
+  timeout: 10000,
+})).on('authenticated', (socket) => {
+  console.info('authenticated');
+  const user = socket.decoded_token;
+
+  socket.on('send', (data) => {
+    if(data.type === 'client') {
+      // If we receive a new message from the web client we send it
+      // to the mac client.
+      socket.to(user.id + '-mac').emit('message', data.message);
+    } else {
+      // If we receive a new message from the mac client we save it to
+      // the database. When the database receives new messages it will
+      // notify the web clients via a change handler.
+      messageStore.add(user.id, data.message);
+    }
+  });
+
+  socket.on('ready', (data) => {
+    console.info('ready');
+    if(data.type === 'client') {
+      // Add a web client to the user group.
+      socket.join(user.id + '-client');
+
+      // When the message store receives a new message notify the web clients for
+      // that user.
+      messageStore.addMessageListener(user.id, (message) => {
+        console.log('New message for user:', user.id, message);
+        socket.emit('message', message);
+      });
+    } else {
+      // Add a mac client to the user group.
+      socket.join(user.id + '-mac');
+    }
+  });
+});
 
 /**
- * Index
+ * Index handler.
  */
 app.get('/', (req, res) => {
   const webserver = process.env.NODE_ENV === 'production' ? '' : '//localhost:8080';
@@ -39,6 +100,7 @@ app.get('/', (req, res) => {
       </head>
       <body>
         <div id="content"></div>
+        <script src="/socket.io/socket.io.js"></script>
         <script src="${webserver}/dist/client.js"></script>
       </body>
     </html>`
@@ -47,10 +109,13 @@ app.get('/', (req, res) => {
   res.send(output);
 });
 
+/**
+ * Login handler.
+ */
 app.post('/api/login', async (req, res) => {
-  let { username, password } = req.body;
+  const { username, password } = req.body;
 
-  let {user, error} = await userStore.login(username, password);
+  const {user, error} = await userStore.login(username, password);
   if(error) {
     res.json({
       result: 'INVALID_USER_PASS',
@@ -59,22 +124,31 @@ app.post('/api/login', async (req, res) => {
     return;
   }
 
+  const token = jwt.sign(user, config.server.jwtSecret);
+
   res.json({
     result: 'OK',
-    user: user,
-    token: 'awdawdwad',
+    user: {
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+    token: token,
   });
 });
 
+/**
+ * Register handler.
+ */
 app.post('/api/register', (req, res) => {
-  let {
+  const {
     username,
     password,
     firstName,
     lastName,
   } = req.body;
 
-  let {user, error} = userStore.register(username, password, firstName, lastName);
+  const {user, error} = userStore.register(username, password, firstName, lastName);
 
   if(error) {
     res.json({
@@ -84,30 +158,78 @@ app.post('/api/register', (req, res) => {
     return;
   }
 
+  const token = jwt.sign(user, config.server.jwtSecret);
+
   res.json({
     result: 'OK',
-    user: user,
-    token: 'awdawdwad',
+    user: {
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+    token: token,
   });
 });
 
-function startServer() {
-  let server = app.listen(process.env.PORT || 8000, () => {
-    let host = server.address().address;
-    let port = server.address().port;
+(async () => {
+  // Init database.
+  console.info(`Connecting to database at ${config.database.host}:${config.database.port}...`);
+  let conn;
+  try {
+    conn = await db.connect({
+      host: config.database.host,
+      port: config.database.port,
+      db: 'imessagechat',
+      /*authKey: config.database.authKey,*/
+    });
+  } catch(error) {
+    console.error(`Error connecting to database.\n${error}`);
+    return;
+  }
+  console.info('Connected to database');
 
-    console.info(`==> ✅  Server is listening\n==> 🌎  Go to http://${host}:${port}`);
-  });
-}
+  // Create the database and tables if necessary.
+  console.info('Creating database and tables...');
+  try {
+    await db.dbCreate('imessagechat').run(conn);
+    console.info('Created database imessagechat.');
+  } catch(error) {
+    console.info('Database imessagechat already exists.');
+  }
+  try {
+    await db.tableCreate('users').run(conn);
+    console.info('Created table users.');
+  } catch(error) {
+    console.info('Table users already exists.');
+  }
+  try {
+    await db.tableCreate('messages').run(conn);
+    console.info('Created table messages.');
+  } catch(error) {
+    console.info('Table messages already exists.');
+  }
 
-db.connect({
-  host: config.database.host,
-  port: config.database.port,
-  db: 'imessagechat',
-  /*authKey: config.database.authKey,*/
-}).then((conn) => {
+  // Create stores.
   userStore = new UserStore(conn);
-  startServer();
-}).catch((err) => {
-  console.error(err);
-});
+  messageStore = new MessageStore(conn);
+
+  try {
+    await messageStore.init();
+  } catch(err) {
+    console.log('Error initializing the message store.', err);
+    return;
+  }
+
+  messageStore.addMessageListener('90d0fd03-a617-4ee8-8385-10174d6d0c87', (message) => {
+    console.log(message);
+  });
+
+  let messages = await messageStore.list('90d0fd03-a617-4ee8-8385-10174d6d0c87');
+  console.log(messages);
+
+  // Start the server.
+  console.info(`Starting server on port ${config.server.port}...`);
+  server.listen(config.server.port, () => {
+    console.info('Server started.');
+  });
+})();

@@ -23,6 +23,7 @@ export default class UserStore {
     }
     return {
       user: {
+        id: user.id,
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -31,18 +32,18 @@ export default class UserStore {
   }
 
   async register(username, password, firstName, lastName) {
-    let passwordHash = bcrypt.hashSync(password, 10);
+    const passwordHash = bcrypt.hashSync(password, 10);
 
-    let c = await db.table('users')
+    const c = await db.table('users')
       .filter(db.row('username').eq(username))
       .limit(1)
       .run(this.conn);
-    let res = await c.toArray();
+    const res = await c.toArray();
     if(res.length > 0) {
       return {error: 'ERR_NOT_AVAILABLE'};
     }
 
-    await db.table('users')
+    const result = await db.table('users')
       .insert({
         username: username,
         passwordHash: passwordHash,
@@ -53,6 +54,7 @@ export default class UserStore {
 
     return {
       user: {
+        id: result.generated_keys[0],
         username: username,
         firstName: firstName,
         lastName: lastName,
