@@ -10,6 +10,7 @@ class ChatHandler extends React.Component {
     this.state = {
       messages: MessageStore.list(),
       message: '',
+      convo: 'janicduplessis@gmail.com'/*'😎Hit Squad😎'*/,
     };
 
     this._messageStoreListener = this._onChange.bind(this);
@@ -24,8 +25,8 @@ class ChatHandler extends React.Component {
   }
 
   render() {
-    const messages = this.state.messages.map((m) => {
-      return <div>{m.get('message')}</div>;
+    const messages = this.state.messages.map((m, i) => {
+      return <div key={i}>{m.get('author')}: {m.get('text')}</div>;
     });
     return (
       <div>
@@ -33,8 +34,9 @@ class ChatHandler extends React.Component {
         <div>{messages}</div>
         <textarea
           onChange={this._messageChanged.bind(this)}
+          onKeyUp={this._textAreaKeyUp.bind(this)}
           value={this.state.message} />
-        <button onClick={this._sendMessage.bind(this)}>test</button>
+        <button onClick={this._sendMessage.bind(this)}>Send</button>
       </div>
     );
   }
@@ -45,9 +47,19 @@ class ChatHandler extends React.Component {
     });
   }
 
+  _textAreaKeyUp(event) {
+    // Submit when enter key is pressed. Shift-enter will still change line.
+    if(event.keyCode === 13 && !event.shiftKey) {
+      this._sendMessage();
+      event.preventDefault();
+    }
+  }
+
   _sendMessage() {
     MessageActions.send({
-      message: this.state.message,
+      author: 'me',
+      text: this.state.message,
+      convo: this.state.convo,
     });
     this.setState({
       message: '',

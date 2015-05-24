@@ -140,7 +140,7 @@ app.post('/api/login', async (req, res) => {
 /**
  * Register handler.
  */
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const {
     username,
     password,
@@ -148,7 +148,7 @@ app.post('/api/register', (req, res) => {
     lastName,
   } = req.body;
 
-  const {user, error} = userStore.register(username, password, firstName, lastName);
+  const {user, error} = await userStore.register(username, password, firstName, lastName);
 
   if(error) {
     res.json({

@@ -43,7 +43,7 @@ class ApiUtils {
   }
 
   sendMessage(message) {
-    this._sendSocket('send', message);
+    this._sendSocket('send', {message: message});
   }
 
   onMessage(callback) {
