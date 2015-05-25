@@ -6,3 +6,5 @@ dist/
 .DS_Store
 imessage-client.sublime-project
 imessage-client.sublime-workspace
+
+config/*.user.json

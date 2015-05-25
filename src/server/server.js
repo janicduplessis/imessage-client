@@ -14,7 +14,8 @@ import MessageStore from './MessageStore';
 
 nconf.argv()
   .env()
-  .file({file: 'config/server.json'});
+  .file('user', 'config/server.user.json')
+  .file('default', 'config/server.default.json');
 
 const config = {
   database: {
