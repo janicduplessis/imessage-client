@@ -48,14 +48,18 @@ app.use('/', express.static('static'));
 app.use(bodyParser.json());
 app.use(expressJwt({secret: config.server.jwtSecret}).unless({path: publicPaths}));
 
+/**
+ * Websocket handlers.
+ */
 app.io.sockets.on('connection', socketJwt.authorize({
   secret: config.server.jwtSecret,
   timeout: 10000,
 })).on('authenticated', (socket) => {
-  console.info('authenticated');
   const user = socket.decoded_token;
+  console.info('authenticated', user);
 
   socket.on('send', (data) => {
+    console.info('send', user.id);
     if(data.type === 'client') {
       // If we receive a new message from the web client we send it
       // to the mac client.
@@ -64,12 +68,16 @@ app.io.sockets.on('connection', socketJwt.authorize({
       // If we receive a new message from the mac client we save it to
       // the database. When the database receives new messages it will
       // notify the web clients via a change handler.
-      messageStore.add(user.id, data.message);
+      try {
+        messageStore.add(user.id, data.message);
+      } catch(err) {
+        console.error(err);
+      }
     }
   });
 
   socket.on('ready', (data) => {
-    console.info('ready');
+    console.info('ready', user.id);
     if(data.type === 'client') {
       // Add a web client to the user group.
       socket.join(user.id + '-client');
@@ -85,6 +93,12 @@ app.io.sockets.on('connection', socketJwt.authorize({
       socket.join(user.id + '-mac');
     }
   });
+
+  socket.on('disconnect', () => {
+    console.info('disconnected', user.id);
+    socket.leave(user.id + '-client');
+    socket.leave(user.id + '-mac');
+  });
 });
 
 /**
@@ -97,6 +111,7 @@ app.get('/', (req, res) => {
     <html lang="en-us">
       <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
         <title>iMessage web client</title>
       </head>
       <body>
@@ -141,7 +156,7 @@ app.post('/api/login', async (req, res) => {
 /**
  * Register handler.
  */
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const {
     username,
     password,
@@ -149,7 +164,7 @@ app.post('/api/register', (req, res) => {
     lastName,
   } = req.body;
 
-  const {user, error} = userStore.register(username, password, firstName, lastName);
+  const {user, error} = await userStore.register(username, password, firstName, lastName);
 
   if(error) {
     res.json({
@@ -170,6 +185,16 @@ app.post('/api/register', (req, res) => {
     },
     token: token,
   });
+});
+
+app.get('/api/messages/:convoId', async (req, res) => {
+  const messages = await messageStore.listMessages(req.user.id, req.params.convoId);
+  res.json(messages);
+});
+
+app.get('/api/convos', async (req, res) => {
+  const convos = await messageStore.listConvos(req.user.id);
+  res.json(convos);
 });
 
 (async () => {
@@ -209,6 +234,12 @@ app.post('/api/register', (req, res) => {
   } catch(error) {
     console.info('Table messages already exists.');
   }
+  try {
+    await db.tableCreate('convos').run(conn);
+    console.info('Created table convos.');
+  } catch(error) {
+    console.info('Table convos already exists.');
+  }
 
   // Create stores.
   userStore = new UserStore(conn);
@@ -220,13 +251,6 @@ app.post('/api/register', (req, res) => {
     console.log('Error initializing the message store.', err);
     return;
   }
-
-  messageStore.addMessageListener('90d0fd03-a617-4ee8-8385-10174d6d0c87', (message) => {
-    console.log(message);
-  });
-
-  let messages = await messageStore.list('90d0fd03-a617-4ee8-8385-10174d6d0c87');
-  console.log(messages);
 
   // Start the server.
   console.info(`Starting server on port ${config.server.port}...`);

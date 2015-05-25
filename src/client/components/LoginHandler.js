@@ -15,7 +15,7 @@ class LoginHandler extends React.Component {
     return (
       <div>
         <h1>Login</h1>
-        <form onSubmit={this._submit.bind(this)}>
+        <form className="vbox" onSubmit={this._submit.bind(this)}>
           <input
             placeholder="Username"
             type="text"

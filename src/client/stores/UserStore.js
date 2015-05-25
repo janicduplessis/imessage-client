@@ -1,6 +1,7 @@
-import { Map } from 'immutable';
+import { fromJS } from 'immutable';
 import { Flux, Store } from '../flux';
 import UserActions from '../actions/UserActions';
+import Storage from '../utils/Storage';
 
 class UserStore extends Store {
   constructor() {
@@ -9,8 +10,13 @@ class UserStore extends Store {
     this.register(UserActions.login, this._handleLogin);
     this.register(UserActions.register, this._handleLogin);
 
+    let user = Storage.getItem('user');
+    if(user) {
+      user = fromJS(user);
+    }
+
     this.state = {
-      user: null,
+      user: user,
       error: null,
     };
   }
@@ -21,8 +27,9 @@ class UserStore extends Store {
 
   _handleLogin(loginResp) {
     if(loginResp.result === 'OK') {
+      Storage.setItem('user', loginResp.user);
       this.setState({
-        user: new Map(loginResp.user),
+        user: fromJS(loginResp.user),
         error: null,
       });
     } else {
