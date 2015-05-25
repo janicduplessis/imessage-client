@@ -5,16 +5,16 @@ class UserActions extends Actions {
   async login(loginInfo) {
     try {
       return await ApiUtils.login(loginInfo);
-    } catch(error) {
-      console.log(error);
+    } catch(err) {
+      console.error(err);
     }
   }
 
   async register(registerInfo) {
     try {
       return await ApiUtils.register(registerInfo);
-    } catch(error) {
-      console.log(error);
+    } catch(err) {
+      console.error(err);
     }
   }
 }

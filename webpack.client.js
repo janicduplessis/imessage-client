@@ -23,6 +23,8 @@ module.exports = {
     loaders: [
       {include: /\.json$/, loaders: ['json-loader']},
       {include: /\.js$/, loaders: ['babel-loader?stage=1&optional=runtime'], exclude: /node_modules/},
+      {test: /\.css$/, loader: 'style!css'},
+      {test: /\.scss$/, loader: 'style!css!sass'},
     ],
   },
   resolve: {

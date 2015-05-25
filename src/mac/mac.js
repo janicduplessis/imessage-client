@@ -58,6 +58,11 @@ function connect(token) {
 
   socket.on('message', sendMessage);
 
+  socket.on('disconnect', () => {
+    // TODO: reconnect
+    throw Error('Disconnected');
+  });
+
   socket.emit('authenticate', {token: token});
 
   db = new sqlite.Database(IMESSAGE_DB);
@@ -74,7 +79,7 @@ function receiveMessage(message) {
 
 function sendMessage(message) {
   console.log(message);
-  imessagemodule.sendMessage(message.convo, message.text);
+  imessagemodule.sendMessage(message.convoName, message.text);
 }
 
 async function checkNewMessages() {
@@ -111,7 +116,7 @@ async function checkNewMessages() {
         const message = {
           author: author,
           text: m.text,
-          convo: m.display_name || m.id,
+          convoName: m.display_name || m.id,
           fromMe: isFromMe,
         };
         console.info(message);

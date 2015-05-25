@@ -4,18 +4,24 @@ import NavBar from './NavBar';
 import UserStore from '../stores/UserStore';
 import MessageActions from '../actions/MessageActions';
 
+import '../styles/app.scss';
+
 class AppHandler extends React.Component {
 
   constructor(props) {
     super(props);
 
     this.state = {
-      user: null,
+      user: UserStore.get(),
     };
   }
 
   componentDidMount() {
     UserStore.listen(this._userChanged.bind(this));
+
+    if(this.state.user) {
+      MessageActions.connect();
+    }
   }
 
   componentWillUnmount() {
@@ -24,9 +30,13 @@ class AppHandler extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="app vbox">
         <NavBar user={this.state.user}/>
-        <RouteHandler {...this.props} key={this.props.pathname} />
+        <div className="page-content vbox">
+          <div className="content vbox">
+            <RouteHandler {...this.props} key={this.props.pathname} />
+          </div>
+        </div>
       </div>
     );
   }
