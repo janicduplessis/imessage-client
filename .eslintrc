@@ -4,10 +4,16 @@
     "browser": true,
     "es6": true,
     "node": true,
+    "jasmine": true
   },
   "ecmaFeatures": {
     "jsx": true,
   },
+
+  "globals": {
+    "jest": false,
+  },
+
   "rules": {
     "quotes": [2, "single"],
     "no-mixed-requires": [0],

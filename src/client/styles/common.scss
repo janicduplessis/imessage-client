@@ -3,3 +3,7 @@ $colorPrimaryDark: #283593;
 $colorAccent: #F50057;
 
 $fontStack: Arial, Helvetica, sans-serif;
+
+.send-icon:before {
+  content: 'send',
+}

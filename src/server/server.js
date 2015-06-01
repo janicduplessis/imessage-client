@@ -106,6 +106,7 @@ app.io.sockets.on('connection', socketJwt.authorize({
  */
 app.get('/', (req, res) => {
   const webserver = process.env.NODE_ENV === 'production' ? '' : '//localhost:8080';
+  // TODO: Serve fonts and icons locally
   let output = (
     `<!doctype html>
     <html lang="en-us">
@@ -113,6 +114,8 @@ app.get('/', (req, res) => {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
         <title>iMessage web client</title>
+        <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,500' rel='stylesheet' type='text/css'>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
       </head>
       <body>
         <div id="content"></div>

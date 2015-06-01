@@ -1,5 +1,13 @@
 import React from 'react';
+import TransitionGroup from 'react/lib/ReactCSSTransitionGroup';
+import StyleSheet from 'react-style';
+import {
+  Paper,
+} from 'material-ui';
 
+import MessageList from './MessageList';
+import SendBox from './SendBox';
+import colors from './colors';
 import MessageStore from '../stores/MessageStore';
 import MessageActions from '../actions/MessageActions';
 
@@ -11,7 +19,6 @@ class ChatHandler extends React.Component {
       messages: MessageStore.listMessages(null),
       convos: MessageStore.listConvos(),
       curConvo: null,
-      message: '',
     };
 
     this._messageStoreListener = this._onStoreChange.bind(this);
@@ -29,64 +36,47 @@ class ChatHandler extends React.Component {
 
   render() {
     const convos = this.state.convos.map((c, i) => {
+      const selected = this.state.curConvo && c.get('id') === this.state.curConvo.get('id');
+      const convStyles = selected ? [styles.convo, styles.selectedConvo] : [styles.convo];
       return (
         <div
+          styles={convStyles}
           onClick={this._changeConvo.bind(this, c.get('id'))}
           key={i}>
             {c.get('name')}
         </div>
       );
     }).toList();
-    if(!this.state.curConvo) {
-      return (
-        <div>
-          <div>{convos}</div>
-          <div>
-            No conversation selected
+
+    const sendbox = this.state.curConvo ? <SendBox onMessage={this._sendMessage.bind(this)} /> : null;
+
+    return (
+      <div style={styles.container}>
+        <div style={styles.chat}>
+          <div style={styles.left}>
+            <div styles={[styles.scroll]}>
+              <Paper style={styles.convos}>
+                {convos}
+              </Paper>
+            </div>
+          </div>
+          <div style={styles.right}>
+            <MessageList messages={this.state.messages} />
+            {sendbox}
           </div>
         </div>
-      );
-    }
-    const messages = this.state.messages.map((m, i) => {
-      return <div key={i}>{m.get('author')}: {m.get('text')}</div>;
-    });
-    return (
-      <div>
-        <h1>Chat</h1>
-        <div>{convos}</div>
-        <div>{messages}</div>
-        <textarea
-          onChange={this._messageChanged.bind(this)}
-          onKeyUp={this._textAreaKeyUp.bind(this)}
-          value={this.state.message} />
-        <button onClick={this._sendMessage.bind(this)}>Send</button>
       </div>
     );
   }
 
-  _messageChanged(event) {
-    this.setState({
-      message: event.target.value,
-    });
-  }
-
-  _textAreaKeyUp(event) {
-    // Submit when enter key is pressed. Shift-enter will still change line.
-    if(event.keyCode === 13 && !event.shiftKey) {
-      this._sendMessage();
-      event.preventDefault();
-    }
-  }
-
-  _sendMessage() {
+  _sendMessage(message) {
     MessageActions.send({
+      id: 'tmp_' + Math.random(),
       author: 'me',
-      text: this.state.message,
+      text: message,
       convoName: this.state.curConvo.get('name'),
       convoId: this.state.curConvo.get('id'),
-    });
-    this.setState({
-      message: '',
+      fromMe: true,
     });
   }
 
@@ -110,5 +100,50 @@ class ChatHandler extends React.Component {
     });
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    right: 0,
+    bottom: 0,
+  },
+  chat: {
+    display: 'flex',
+    flex: 1,
+  },
+  left: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    position: 'relative',
+    marginRight: 16,
+  },
+  right: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 2,
+  },
+  scroll: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    overflow: 'auto',
+  },
+  convos: {
+    margin: 8,
+    marginTop: 16,
+  },
+  convo: {
+    padding: 16,
+  },
+  selectedConvo: {
+    fontWeight: 'bold',
+    color: colors.primary,
+    backgroundColor: '#f0f0f0',
+  },
+});
 
 export default ChatHandler;

@@ -6,7 +6,7 @@
   },
   "main": "babel.mac.js",
   "scripts": {
-    "start": "node ./babel.mac.js"
+    "start": "iojs ./babel.mac.js"
   },
   "dependencies": {
     "babel": "^5.4.2",

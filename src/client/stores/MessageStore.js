@@ -31,7 +31,7 @@ class MessageStore extends Store {
     const convo = this._getConvo(message.convoId, message.convoName);
     const messages = convo.get('messages');
     // Check if the message we received is already there but without and id.
-    if(message.id) {
+    if(message.id.indexOf('tmp_') >= 0) {
       const oldMesIndex = messages.findIndex((m) => {
         return !m.get('id')
           && m.get('text') === message.text
@@ -40,10 +40,10 @@ class MessageStore extends Store {
       if(oldMesIndex >= 0) {
         newMessages = messages.setIn([oldMesIndex, 'id'], message.id);
       } else {
-        newMessages = messages.push(fromJS(message));
+        newMessages = messages.unshift(fromJS(message));
       }
     } else {
-      newMessages = messages.push(fromJS(message));
+      newMessages = messages.unshift(fromJS(message));
     }
     this.setState({
       convos: this.state.convos.setIn([message.convoId, 'messages'], newMessages),

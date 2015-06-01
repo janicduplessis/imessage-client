@@ -1,9 +1,13 @@
 import React from 'react';
-import { RouteHandler } from 'react-router';
+import StyleSheet from 'react-style';
+import TransitionGroup from 'react/lib/ReactCSSTransitionGroup';
+import {RouteHandler} from 'react-router';
 import NavBar from './NavBar';
 import UserStore from '../stores/UserStore';
 import MessageActions from '../actions/MessageActions';
+import ThemeManager from 'material-ui/lib/styles/theme-manager';
 
+import colors from './colors';
 import '../styles/app.scss';
 
 class AppHandler extends React.Component {
@@ -14,6 +18,20 @@ class AppHandler extends React.Component {
     this.state = {
       user: UserStore.get(),
     };
+    this.themeManager = new ThemeManager();
+  }
+
+  getChildContext() {
+    return {
+      muiTheme: this.themeManager.getCurrentTheme(),
+    };
+  }
+
+  componentWillMount() {
+    this.themeManager.setPalette({
+      primary1Color: colors.primary,
+      accent1Color: colors.accent,
+    });
   }
 
   componentDidMount() {
@@ -29,13 +47,17 @@ class AppHandler extends React.Component {
   }
 
   render() {
+    const name = this.context.router.getCurrentPath();
     return (
       <div className="app vbox">
-        <NavBar user={this.state.user}/>
-        <div className="page-content vbox">
-          <div className="content vbox">
-            <RouteHandler {...this.props} key={this.props.pathname} />
-          </div>
+        <NavBar user={this.state.user} router={this.context.router}/>
+        <div className="vbox" style={styles.content}>
+          <TransitionGroup
+              transitionName="content-fade"
+              component="div"
+              className={'content vbox ' + this._curRouteClassName()}>
+            <RouteHandler {...this.props} key={name} />
+          </TransitionGroup>
         </div>
       </div>
     );
@@ -55,10 +77,24 @@ class AppHandler extends React.Component {
       user: user,
     });
   }
+
+  _curRouteClassName() {
+    return 'page-' + this.context.router.getRouteAtDepth(1).name;
+  }
 }
+
+AppHandler.childContextTypes = {
+  muiTheme: React.PropTypes.object,
+};
 
 AppHandler.contextTypes = {
   router: React.PropTypes.func,
 };
+
+const styles = StyleSheet.create({
+  content: {
+    backgroundColor: '#FBFBFB',
+  },
+});
 
 export default AppHandler;

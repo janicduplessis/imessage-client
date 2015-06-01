@@ -1,4 +1,10 @@
 import React from 'react';
+import StyleSheet from 'react-style';
+import {
+  TextField,
+  RaisedButton,
+} from 'material-ui';
+
 import UserActions from '../actions/UserActions';
 
 class LoginHandler extends React.Component {
@@ -15,18 +21,18 @@ class LoginHandler extends React.Component {
     return (
       <div>
         <h1>Login</h1>
-        <form className="vbox" onSubmit={this._submit.bind(this)}>
-          <input
-            placeholder="Username"
+        <form style={styles.form} onSubmit={this._submit.bind(this)}>
+          <TextField
+            floatingLabelText="Username"
             type="text"
             value={this.state.username}
             onChange={this._usernameChanged.bind(this)} />
-          <input
-            placeholder="Password"
+          <TextField
+            floatingLabelText="Password"
             type="password"
             value={this.state.password}
             onChange={this._passwordChanged.bind(this)} />
-          <button type="submit">Login</button>
+          <RaisedButton style={styles.submit} label="Login" primary={true} type="submit" />
         </form>
       </div>
     );
@@ -48,5 +54,16 @@ class LoginHandler extends React.Component {
     });
   }
 }
+
+const styles = StyleSheet.create({
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  submit: {
+    marginTop: 32,
+  },
+});
 
 export default LoginHandler;

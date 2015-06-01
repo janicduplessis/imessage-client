@@ -54,6 +54,33 @@ input {
 .content {
   display: flex;
   flex: 1;
+  position: relative;
+  overflow: visible;
+
+  > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    // Animations
+    &.content-fade-enter {
+      opacity: 0.01;
+
+      &.content-fade-enter-active {
+        transition: all .4s ease-in;
+        opacity: 1;
+      }
+    }
+
+    &.content-fade-leave {
+      opacity: 1;
+      transition: all .4s ease-in;
+
+      &.content-fade-leave-active {
+        opacity: 0.01;
+      }
+    }
+  }
 
   @media screen and (min-width: 800px) {
     width: 800px;
@@ -61,7 +88,39 @@ input {
   }
 }
 
-.page-content {
-  overflow-y: auto;
-  padding: 16px;
+.message-animation-enter {
+  transition: all .4s ease-in;
+  opacity: 0.01;
+
+  .message-author {
+    transition: all .4s ease-in;
+    transform: scale(0);
+  }
+
+  .message-text {
+    transition: all .4s ease-in;
+    transform: translateX(-100px);
+  }
+
+  &.message-animation-enter-active {
+
+    opacity: 1;
+
+    .message-author {
+      transform: scale(1);
+    }
+
+    .message-text {
+      transform: translateX(0px);
+    }
+  }
+}
+
+.message-animation-leave {
+  opacity: 1;
+  transition: all .4s ease-in;
+
+  &.message-animation-leave-active {
+    opacity: 0.01;
+  }
 }

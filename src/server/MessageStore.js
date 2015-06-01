@@ -119,7 +119,9 @@ export default class MessageStore {
     const c = await db.table('messages')
       .filter(db.row('userId').eq(userId)
         .and(db.row('convoId').eq(convoId)))
-      .eqJoin('convoId', db.table('convos')).zip()
+      .eqJoin('convoId', db.table('convos'))
+      .without({'right': {'id': true}})
+      .zip()
       .orderBy('date')
       .slice(min, max)
       .map(function(m) {

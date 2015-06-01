@@ -1,4 +1,10 @@
 import React from 'react';
+import StyleSheet from 'react-style';
+import {
+  TextField,
+  RaisedButton,
+} from 'material-ui';
+
 import UserActions from '../actions/UserActions';
 
 class RegisterHandler extends React.Component {
@@ -15,33 +21,33 @@ class RegisterHandler extends React.Component {
     return (
       <div>
         <h1>Register</h1>
-        <form onSubmit={this._submit.bind(this)}>
-          <input
-            placeholder="Username"
+        <form style={styles.form} onSubmit={this._submit.bind(this)}>
+          <TextField
+            floatingLabelText="Username"
             type="text"
             value={this.state.username}
             onChange={this._usernameChanged.bind(this)} />
-          <input
-            placeholder="Password"
+          <TextField
+            floatingLabelText="Password"
             type="password"
             value={this.state.password}
             onChange={this._passwordChanged.bind(this)} />
-          <input
-            placeholder="Repeat password"
+          <TextField
+            floatingLabelText="Repeat password"
             type="password"
             value={this.state.passwordRepeat}
             onChange={this._passwordRepeatChanged.bind(this)} />
-          <input
-            placeholder="First name"
+          <TextField
+            floatingLabelText="First name"
             type="text"
             value={this.state.firstName}
             onChange={this._firstNameChanged.bind(this)} />
-          <input
-            placeholder="Last name"
+          <TextField
+            floatingLabelText="Last name"
             type="text"
             value={this.state.lastName}
             onChange={this._lastNameChanged.bind(this)} />
-          <button type="submit">Register</button>
+          <RaisedButton style={styles.submit} primary={true} label="Register" type="submit" />
         </form>
       </div>
     );
@@ -83,5 +89,16 @@ class RegisterHandler extends React.Component {
     });
   }
 }
+
+const styles = StyleSheet.create({
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  submit: {
+    marginTop: 32,
+  },
+});
 
 export default RegisterHandler;
