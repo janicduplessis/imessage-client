@@ -1,4 +1,4 @@
-export default class {
+export default class UserUtils {
   static getColorForUser(userName) {
     this.users = this.users || {};
     // Check if we already have generated a color for this user.
