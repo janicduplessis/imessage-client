@@ -28,6 +28,9 @@
       "es6"
     ]
   },
+  "engines": {
+    "iojs": "^2.2.0"
+  },
   "dependencies": {
     "babel": "^5.4.2",
     "bcryptjs": "^2.1.0",
