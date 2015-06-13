@@ -1,1 +1,1 @@
-web: npm run start-server --db.host=$RDB_HOST
+web: node ./babel.server.js --db.host=$RDB_HOST
