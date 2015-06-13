@@ -48,7 +48,7 @@ class ChatHandler extends React.Component {
       );
     }).toList();
 
-    const sendbox = this.state.curConvo ? <SendBox onMessage={this._sendMessage.bind(this)} /> : null;
+    const sendbox = this.state.curConvo ? <SendBox style={styles.sendbox} onMessage={this._sendMessage.bind(this)} /> : null;
 
     return (
       <div style={styles.container}>
@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column',
     flex: 2,
+    position: 'relative',
   },
   scroll: {
     position: 'absolute',
@@ -132,15 +133,23 @@ const styles = StyleSheet.create({
     right: 0,
     overflow: 'auto',
   },
+  sendbox: {
+    position: 'absolute',
+    left: 0,
+    right: 12,
+    bottom: 0,
+  },
   convos: {
     margin: 8,
     marginTop: 16,
   },
   convo: {
     padding: 16,
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
   },
   selectedConvo: {
-    fontWeight: 'bold',
     color: colors.primary,
     backgroundColor: '#f0f0f0',
   },

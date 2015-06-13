@@ -6,7 +6,7 @@ export default class UserUtils {
       return this.users[userName];
     }
     // Gives a random color to the user.
-    const index = Math.floor(Math.random() * 1e8) % colors.length;
+    let index = Math.floor(Math.random() * 1e8) % colors.length;
 
     this.users[userName] = colors[index];
     return this.users[userName];

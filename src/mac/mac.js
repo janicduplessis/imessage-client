@@ -19,13 +19,28 @@ process.on('exit', () => {
   }
 });
 
-prompt.get(['username', 'password'], (err, result) => {
-  if(err) {
-    console.error(err);
-    return;
-  }
-  login(result.username, result.password);
-});
+let schema = {
+  properties: {
+    username: {
+    },
+    password: {
+      hidden: true,
+    },
+  },
+};
+
+loginPrompt();
+
+function loginPrompt() {
+  prompt.get(schema, (err, result) => {
+    if(err) {
+      console.error(err);
+      return;
+    }
+
+    login(result.username, result.password);
+  });
+}
 
 function login(username, password) {
   fetch(URL_LOGIN, {
@@ -41,6 +56,12 @@ function login(username, password) {
   })
   .then((resp) => resp.json())
   .then((resp) => {
+    if(resp.result !== 'OK') {
+      console.log('Invalid username or password. Please try again.');
+      loginPrompt();
+      return;
+    }
+
     connect(resp.token);
   })
   .catch((err) => {
@@ -49,7 +70,11 @@ function login(username, password) {
 }
 
 function connect(token) {
-  socket = io.connect(URL_BASE);
+  try {
+    socket = io.connect(URL_BASE);
+  } catch(error) {
+    console.error(error);
+  }
   socket.on('authenticated', () => {
     socket.emit('ready', {
       type: 'mac',
@@ -59,11 +84,13 @@ function connect(token) {
   socket.on('message', sendMessage);
 
   socket.on('disconnect', () => {
-    // TODO: reconnect
-    throw Error('Disconnected');
+    console.log('Disconnected. Trying to reconnect in 10 seconds...');
+    setTimeout(() => connect(token), 10000);
   });
 
   socket.emit('authenticate', {token: token});
+
+  console.log('Connected');
 
   db = new sqlite.Database(IMESSAGE_DB);
 
@@ -71,6 +98,7 @@ function connect(token) {
 }
 
 function receiveMessage(message) {
+  console.log('Received message:', message);
   socket.emit('send', {
     type: 'mac',
     message: message,
@@ -78,7 +106,7 @@ function receiveMessage(message) {
 }
 
 function sendMessage(message) {
-  console.log(message);
+  console.log('Sending message:', message);
   imessagemodule.sendMessage(message.convoName, message.text);
 }
 
@@ -113,13 +141,13 @@ async function checkNewMessages() {
           }
         }
 
-        const message = {
+        let message = {
           author: author,
           text: m.text,
           convoName: m.display_name || m.id,
           fromMe: isFromMe,
         };
-        console.info(message);
+
         receiveMessage(message);
       }
     }

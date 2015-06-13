@@ -25,10 +25,16 @@ class MessageList extends React.Component {
   }
 
   render() {
-    const messages = this.props.messages.map((m) => {
+    const messages = this.props.messages.map((m, i, self) => {
+      let showAuthor = true;
+      let prev = self.get(i - 1);
+      if(prev) {
+        showAuthor = prev.get('author') !== m.get('author');
+      }
       return (
         <Message
           author={m.get('author')}
+          showAuthor={showAuthor}
           text={m.get('text')}
           fromMe={m.get('fromMe')}
           key={m.get('id')} />
@@ -74,6 +80,8 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column-reverse',
     flex: 1,
+    marginBottom: 72,
+    marginRight: 12,
   },
 });
 

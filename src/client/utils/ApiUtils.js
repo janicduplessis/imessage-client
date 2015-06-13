@@ -42,7 +42,7 @@ class ApiUtils {
    * @param {object} loginInfo - User login info
    */
   async login(loginInfo) {
-    const resp = await this._send(Method.POST, URL_LOGIN, loginInfo);
+    let resp = await this._send(Method.POST, URL_LOGIN, loginInfo);
     if(resp.token) {
       this._setToken(resp.token);
     }
@@ -55,7 +55,7 @@ class ApiUtils {
    * @param  {object} registerInfo - User registration info
    */
   async register(registerInfo) {
-    const resp = await this._send(Method.POST, URL_REGISTER, registerInfo);
+    let resp = await this._send(Method.POST, URL_REGISTER, registerInfo);
     if(resp.token) {
       this._setToken(resp.token);
     }
@@ -95,7 +95,7 @@ class ApiUtils {
     if(params) {
       body = JSON.stringify(params);
     }
-    const headers = {
+    let headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
     };

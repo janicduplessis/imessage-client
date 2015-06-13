@@ -18,7 +18,9 @@ export default class MessageStore {
       c = await db.table('messages')
         .changes()
         .getField('new_val')
-        .eqJoin('convoId', db.table('convos')).zip()
+        .eqJoin('convoId', db.table('convos'))
+          .without({'right': {'id': true}})
+          .zip()
         .run(this.conn);
     } catch(err) {
       console.error(err);
@@ -55,7 +57,7 @@ export default class MessageStore {
    */
   async add(userId, message) {
     let c;
-    console.log(userId, message);
+
     try {
       c = await db.table('convos')
         .filter(db.row('userId').eq(userId)
@@ -114,37 +116,48 @@ export default class MessageStore {
    * @return {Array}
    */
   async listMessages(userId, convoId, page = 0, pageSize = 50) {
-    const min = page * pageSize;
-    const max = min + pageSize;
-    const c = await db.table('messages')
-      .filter(db.row('userId').eq(userId)
-        .and(db.row('convoId').eq(convoId)))
-      .eqJoin('convoId', db.table('convos'))
-      .without({'right': {'id': true}})
-      .zip()
-      .orderBy('date')
-      .slice(min, max)
-      .map(function(m) {
-        return {
-          id: m('id'),
-          convoId: m('convoId'),
-          convoName: m('name'),
-          date: m('date'),
-          author: m('author'),
-          text: m('text'),
-          fromMe: m('fromMe'),
-        };
-      })
-      .run(this.conn);
+    let min = page * pageSize;
+    let max = min + pageSize;
+    let c;
+    try {
+      c = await db.table('messages')
+        .orderBy({index: db.desc('date')})
+        .filter(db.row('userId').eq(userId)
+          .and(db.row('convoId').eq(convoId)))
+        .eqJoin('convoId', db.table('convos'))
+        .without({'right': {'id': true}})
+        .zip()
+        .slice(min, max)
+        .map(function(m) {
+          return {
+            id: m('id'),
+            convoId: m('convoId'),
+            convoName: m('name'),
+            date: m('date'),
+            author: m('author'),
+            text: m('text'),
+            fromMe: m('fromMe'),
+          };
+        })
+        .run(this.conn);
+    } catch(error) {
+      console.error(error);
+    }
 
     return await c.toArray();
   }
 
   async listConvos(userId) {
-    const c = await db.table('convos')
+    let c;
+    try {
+    c = await db.table('convos')
       .filter(db.row('userId').eq(userId))
       .pluck('id', 'name')
       .run(this.conn);
+    } catch(error) {
+      console.error(error);
+    }
+
     return await c.toArray();
   }
 

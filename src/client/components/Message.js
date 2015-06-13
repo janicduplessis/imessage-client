@@ -8,17 +8,33 @@ import colors from './colors';
 import UserUtils from '../utils/UserUtils';
 
 class Message extends React.Component {
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      hovered: false,
+    };
+  }
+
   render() {
-    const name = this.props.author.charAt(0).toUpperCase();
-    const author = (
+    let name = this.state.hovered ? this.props.author : this._initialsFromName(this.props.author);
+    let author = (
       <div
           key="0"
           className="message-author"
-          styles={this._authorStyles()}>
+          styles={this._authorStyles()}
+          onMouseOver={this._onMouseOver.bind(this)}
+          onMouseOut={this._onMouseOut.bind(this)}>
         {name}
       </div>);
-    const message = <Paper key="1" className="message-text" style={styles.text}>{this.props.text}</Paper>;
-    const content = this.props.fromMe ? [message, author] : [author, message];
+    let message = <Paper key="1" className="message-text" style={styles.text}>{this.props.text}</Paper>;
+    let content;
+    if(this.props.showAuthor) {
+      content = this.props.fromMe ? [message, author] : [author, message];
+    } else {
+      content = message;
+    }
     return (
       <div styles={this._messageStyles()}>
         {content}
@@ -27,12 +43,48 @@ class Message extends React.Component {
   }
 
   _messageStyles() {
-    return this.props.fromMe ? [styles.message, styles.fromMe] : [styles.message];
+    let messageStyles = this.props.fromMe ? [styles.message, styles.fromMe] : [styles.message];
+    if(!this.props.showAuthor) {
+      messageStyles.push(this.props.fromMe ? styles.padRight : styles.padLeft);
+    } else {
+      messageStyles.push(styles.padTop);
+    }
+
+    return messageStyles;
   }
 
   _authorStyles() {
-    const color = UserUtils.getColorForUser(this.props.author);
-    return this.props.fromMe ? [styles.author] : [styles.author, {backgroundColor: color}];
+    let color = UserUtils.getColorForUser(this.props.author);
+    let authorStyles = [styles.author];
+
+    if(!this.props.fromMe) {
+      authorStyles.push({backgroundColor: color});
+      if(this.state.hovered) {
+        authorStyles.push(styles.authorHovered);
+      }
+    }
+    return authorStyles;
+  }
+
+  _onMouseOver() {
+    this.setState({
+      hovered: true,
+    });
+  }
+
+  _onMouseOut() {
+    this.setState({
+      hovered: false,
+    });
+  }
+
+  _initialsFromName(name) {
+    let parts = name.split(' ');
+    if(parts.length < 2) {
+      return parts[0].substring(0, 2);
+    } else {
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
   }
 }
 
@@ -47,7 +99,6 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 16,
   },
   fromMe: {
     justifyContent: 'flex-end',
@@ -57,13 +108,33 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     marginTop: 8,
     backgroundColor: colors.primary,
-    borderRadius: 16,
+    borderRadius: 18,
     color: '#fff',
     fontSize: 16,
+    transition: 'all 750ms cubic-bezier(0.23, 1, 0.32, 1)',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    opacity: 1,
+  },
+  authorHovered: {
+    width: 'auto',
+    paddingLeft: 8,
+    paddingRight: 8,
+    borderRadius: 4,
+    opacity: 0.8,
+  },
+  padRight: {
+    marginRight: 36,
+  },
+  padLeft: {
+    marginLeft: 36,
+  },
+  padTop: {
+    marginTop: 8,
   },
   text: {
     padding: 8,

@@ -28,14 +28,15 @@ class MessageStore extends Store {
 
   _handleMessage(message) {
     let newMessages;
-    const convo = this._getConvo(message.convoId, message.convoName);
-    const messages = convo.get('messages');
+    let convo = this._getConvo(message.convoId, message.convoName);
+    let messages = convo.get('messages');
     // Check if the message we received is already there but without and id.
-    if(message.id.indexOf('tmp_') >= 0) {
-      const oldMesIndex = messages.findIndex((m) => {
-        return !m.get('id')
+    if(message.id.indexOf('tmp_') < 0) {
+      let oldMesIndex = messages.findIndex((m) => {
+        return m.get('id').indexOf('tmp_') >= 0
           && m.get('text') === message.text
-          && m.get('convoName') === message.convoName;
+          && m.get('convoName') === message.convoName
+          && m.get('fromMe') === message.fromMe;
       });
       if(oldMesIndex >= 0) {
         newMessages = messages.setIn([oldMesIndex, 'id'], message.id);
@@ -54,10 +55,10 @@ class MessageStore extends Store {
     if(messages.length === 0) {
       return;
     }
-    const convoName = messages[0].convoName;
+    let convoName = messages[0].convoName;
     let convo = this._getConvo(convoId, convoName);
     convo = convo.set('loaded', true);
-    const newMessages = convo.get('messages').concat(fromJS(messages));
+    let newMessages = convo.get('messages').concat(fromJS(messages));
 
     convo = convo.set('messages', newMessages);
 
@@ -99,9 +100,8 @@ class MessageStore extends Store {
         messages: [],
         loaded: false,
       });
-      this.setState({
-        convos: this.state.convos.set(convoId, convo),
-      });
+
+      this.state.convos = this.state.convos.set(convoId, convo);
     }
     return convo;
   }

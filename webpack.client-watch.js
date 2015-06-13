@@ -6,11 +6,11 @@ config.debug = true;
 config.devtool = 'source-map';
 
 config.entry.unshift(
-  'webpack-dev-server/client?http://localhost:8080',
+  'webpack-dev-server/client?http://localhost:8081',
   'webpack/hot/only-dev-server'
 );
 
-config.output.publicPath = 'http://localhost:8080/dist/';
+config.output.publicPath = 'http://localhost:8081/dist/';
 config.output.hotUpdateMainFilename = 'update/[hash]/update.json';
 config.output.hotUpdateChunkFilename = 'update/[hash]/[id].update.js';
 
@@ -29,7 +29,7 @@ config.module = {
 };
 
 config.devServer = {
-  publicPath: 'http://localhost:8080/dist/',
+  publicPath: 'http://localhost:8081/dist/',
   contentBase: './static',
   hot: true,
   inline: true,
@@ -39,6 +39,7 @@ config.devServer = {
   headers: {'Access-Control-Allow-Origin': '*'},
   stats: {colors: true},
   host: '0.0.0.0',
+  port: 8081,
 };
 
 module.exports = config;

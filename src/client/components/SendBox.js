@@ -2,7 +2,6 @@ import React from 'react';
 import StyleSheet from 'react-style';
 import {
   FloatingActionButton,
-  FontIcon,
   Paper,
 } from 'material-ui';
 
@@ -19,8 +18,8 @@ class SendBox extends React.Component {
 
   render() {
     return (
-      <div style={styles.container}>
-        <Paper style={styles.sendBox}>
+      <div styles={[styles.container, this.props.style]}>
+        <Paper zDepth={3} style={styles.sendBox}>
           <textarea
             style={styles.textarea}
             onChange={this._messageChanged.bind(this)}
@@ -74,7 +73,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flex: 1,
     backgroundColor: colors.primary,
-    marginTop: 8,
+    marginTop: 0,
     marginBottom: 16,
     marginLeft: 0,
     marginRight: 8,
@@ -90,7 +89,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   send: {
-    marginTop: 8,
+    marginTop: 0,
   },
   sendIcon: {
     color: '#fff',

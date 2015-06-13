@@ -56,11 +56,16 @@ app.io.sockets.on('connection', socketJwt.authorize({
   timeout: 10000,
 })).on('authenticated', (socket) => {
   const user = socket.decoded_token;
-  console.info('authenticated', user);
+  console.log('Authenticated', user.username);
+
+  let messageListener = (message) => {
+    console.log('Sending message to web client', user.username, message);
+    socket.emit('message', message);
+  };
 
   socket.on('send', (data) => {
-    console.info('send', user.id);
     if(data.type === 'client') {
+      console.log('Message from web client', user.username, data.message);
       // If we receive a new message from the web client we send it
       // to the mac client.
       socket.to(user.id + '-mac').emit('message', data.message);
@@ -68,36 +73,32 @@ app.io.sockets.on('connection', socketJwt.authorize({
       // If we receive a new message from the mac client we save it to
       // the database. When the database receives new messages it will
       // notify the web clients via a change handler.
-      try {
-        messageStore.add(user.id, data.message);
-      } catch(err) {
-        console.error(err);
-      }
+      console.log('Message from mac client', user.username, data.message);
+      messageStore.add(user.id, data.message);
     }
   });
 
   socket.on('ready', (data) => {
-    console.info('ready', user.id);
     if(data.type === 'client') {
+      console.log('Web client connected', user.username);
       // Add a web client to the user group.
       socket.join(user.id + '-client');
 
       // When the message store receives a new message notify the web clients for
       // that user.
-      messageStore.addMessageListener(user.id, (message) => {
-        console.log('New message for user:', user.id, message);
-        socket.emit('message', message);
-      });
+      messageStore.addMessageListener(user.id, messageListener);
     } else {
+      console.log('Mac client connected', user.username);
       // Add a mac client to the user group.
       socket.join(user.id + '-mac');
     }
   });
 
   socket.on('disconnect', () => {
-    console.info('disconnected', user.id);
+    console.info('Disconnected', user.username);
     socket.leave(user.id + '-client');
     socket.leave(user.id + '-mac');
+    messageStore.removeMessageListener(user.id, messageListener);
   });
 });
 
@@ -105,7 +106,7 @@ app.io.sockets.on('connection', socketJwt.authorize({
  * Index handler.
  */
 app.get('/', (req, res) => {
-  const webserver = process.env.NODE_ENV === 'production' ? '' : '//localhost:8080';
+  const webserver = process.env.NODE_ENV === 'production' ? '' : '//localhost:8081';
   // TODO: Serve fonts and icons locally
   let output = (
     `<!doctype html>
@@ -236,6 +237,12 @@ app.get('/api/convos', async (req, res) => {
     console.info('Created table messages.');
   } catch(error) {
     console.info('Table messages already exists.');
+  }
+  try {
+    await db.table('messages').indexCreate('date').run(conn);
+    console.info('Created messages index on date');
+  } catch(error) {
+    console.info('Table messages date index already exists');
   }
   try {
     await db.tableCreate('convos').run(conn);

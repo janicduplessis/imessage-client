@@ -3,16 +3,16 @@
  */
 export default class Storage {
   static getItem(key) {
-    const itemStr = localStorage.getItem(key);
+    let itemStr = localStorage.getItem(key);
     if(!itemStr) {
       return null;
     }
-    const item = JSON.parse(itemStr);
+    let item = JSON.parse(itemStr);
     return item.data;
   }
 
   static setItem(key, item) {
-    const itemStr = JSON.stringify({
+    let itemStr = JSON.stringify({
       data: item,
     });
     localStorage.setItem(key, itemStr);
