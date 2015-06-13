@@ -9,7 +9,7 @@ import jwt from 'jsonwebtoken';
 import expressJwt from 'express-jwt';
 import socketJwt from 'socketio-jwt';
 
-import UserStore from './UserStore';
+import UserStore from './UserStore.js';
 import MessageStore from './MessageStore';
 
 nconf.argv()
