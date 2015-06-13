@@ -6,10 +6,10 @@
   },
   "main": "babel.server.js",
   "scripts": {
-    "start": "iojs ./babel.server",
-    "build": "iojs ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client.js",
-    "watch-client": "iojs ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client-watch.js && iojs ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.client-watch.js",
-    "watch": "iojs ./node_modules/concurrently/src/main.js --kill-others \"npm run watch-client\" \"npm run start\"",
+    "start": "node ./babel.server",
+    "build": "node ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client.js",
+    "watch-client": "node ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client-watch.js && node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.client-watch.js",
+    "watch": "node ./node_modules/concurrently/src/main.js --kill-others \"npm run watch-client\" \"npm run start\"",
     "test": "jest"
   },
   "jest": {
@@ -27,9 +27,6 @@
       "json",
       "es6"
     ]
-  },
-  "engines": {
-    "iojs": "^2.2.0"
   },
   "dependencies": {
     "babel": "^5.4.2",
