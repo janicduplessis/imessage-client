@@ -1,4 +1,4 @@
-import { Map, List, fromJS } from 'immutable';
+import { OrderedMap, List, fromJS } from 'immutable';
 import { Flux, Store } from '../flux';
 import MessageActions from '../actions/MessageActions';
 
@@ -11,7 +11,7 @@ class MessageStore extends Store {
     this.register(MessageActions.listConvos, this._handleListConvos);
 
     this.state = {
-      convos: new Map(),
+      convos: new OrderedMap(),
     };
   }
 
@@ -29,6 +29,7 @@ class MessageStore extends Store {
   _handleMessage(message) {
     let newMessages;
     let convo = this._getConvo(message.convoId, message.convoName);
+    convo = convo.set('dateLastMessage', new Date());
     let messages = convo.get('messages');
     // Check if the message we received is already there but without and id.
     if(message.id.indexOf('tmp_') < 0) {
@@ -46,8 +47,17 @@ class MessageStore extends Store {
     } else {
       newMessages = messages.unshift(fromJS(message));
     }
+
+    convo = convo.set('messages', newMessages);
+
+    let convos = this.state.convos.set(message.convoId, convo)
+      .sort((a, b) => {
+        return (a.get('dateLastMessage') && a.get('dateLastMessage').getTime() || 0)
+          < (b.get('dateLastMessage') && b.get('dateLastMessage').getTime() || 0) ? 1 : -1;
+      });
+
     this.setState({
-      convos: this.state.convos.setIn([message.convoId, 'messages'], newMessages),
+      convos: convos,
     });
   }
 

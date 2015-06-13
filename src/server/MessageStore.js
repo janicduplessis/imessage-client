@@ -152,7 +152,34 @@ export default class MessageStore {
     try {
     c = await db.table('convos')
       .filter(db.row('userId').eq(userId))
-      .pluck('id', 'name')
+      .map(function(c) {
+        let count = db.table('messages')
+          .filter(function(m) {
+            return m('convoId').eq(c('id'));
+          })
+          .count();
+        let lastMessage = db.table('messages')
+          .orderBy({index: db.desc('date')})
+            .filter(function(m) {
+              return m('convoId').eq(c('id'));
+            })
+          .limit(1)
+          .coerceTo('array')
+          .do(function(ele) {
+            return db.branch(
+              ele.count().gt(0),
+              ele.nth(0),
+              {});
+          });
+
+        return {
+          id: c('id'),
+          name: c('name'),
+          lastMessageDate: lastMessage('date').default(null),
+          messageCount: count,
+        };
+      })
+      .orderBy(db.desc('lastMessageDate'))
       .run(this.conn);
     } catch(error) {
       console.error(error);
@@ -182,6 +209,8 @@ export default class MessageStore {
    * @param {Function} callback
    */
   removeMessageListener(userId, callback) {
-    this.users.get(userId).delete(callback);
+    if(this.users.get(userId)) {
+      this.users.get(userId).delete(callback);
+    }
   }
 }
