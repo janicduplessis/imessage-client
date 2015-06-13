@@ -1,4 +1,4 @@
-import { Flummox, Store, Actions} from 'flummox';
+import {Flummox, Store, Actions} from 'flummox';
 
 class BaseStore extends Store {
   listen(fn) {
