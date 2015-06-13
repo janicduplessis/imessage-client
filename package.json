@@ -5,7 +5,7 @@
     "url": "https://github.com/janicduplessis/imessage-client.git"
   },
   "scripts": {
-    "start": "node ./babel.server",
+    "start-server": "node ./babel.server.js",
     "build": "node ./node_modules/webpack/bin/webpack.js --config webpack.client.js",
     "watch-client": "node ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client-watch.js && node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.client-watch.js",
     "watch": "node ./node_modules/concurrently/src/main.js --kill-others \"npm run watch-client\" \"npm run start\"",
