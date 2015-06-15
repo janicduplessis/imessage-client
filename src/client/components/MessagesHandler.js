@@ -46,12 +46,13 @@ class MessagesHandler extends React.Component {
   }
 
   _sendMessage(message) {
+    let convo = MessageStore.convo(this.props.params.id);
     MessageActions.send({
       id: 'tmp_' + Math.random(),
       author: 'me',
       text: message,
-      convoName: this.state.curConvo.get('name'),
-      convoId: this.state.curConvo.get('id'),
+      convoName: convo.get('name'),
+      convoId: convo.get('id'),
       fromMe: true,
     });
   }

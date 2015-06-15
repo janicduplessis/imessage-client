@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 72,
     marginRight: 12,
+    marginLeft: 12,
   },
 });
 
