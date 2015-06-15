@@ -7,7 +7,12 @@ import {
 
 import colors from './colors';
 
-class SendBox extends React.Component {
+export default class SendBox extends React.Component {
+
+  static propTypes = {
+    onMessage: React.PropTypes.func.isRequired,
+  };
+
   constructor(props) {
     super(props);
 
@@ -60,10 +65,6 @@ class SendBox extends React.Component {
   }
 }
 
-SendBox.propTypes = {
-  onMessage: React.PropTypes.func.isRequired,
-};
-
 const styles = StyleSheet.create({
   container: {
     display: 'flex',
@@ -95,5 +96,3 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
-
-export default SendBox;

@@ -7,7 +7,8 @@ import {
 
 import UserActions from '../actions/UserActions';
 
-class LoginHandler extends React.Component {
+export default class LoginHandler extends React.Component {
+
   constructor(props) {
     super(props);
 
@@ -65,5 +66,3 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
 });
-
-export default LoginHandler;
