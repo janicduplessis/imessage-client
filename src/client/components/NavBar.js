@@ -66,7 +66,7 @@ export default class NavBar extends React.Component {
         iconStyle={styles.backIcon}
         iconClassName="material-icons back-icon"
         onClick={this._onBack.bind(this)} />
-    ) : null;
+    ) : <div />; // can use null when my pull request is merged.
 
     return (
       <Paper zDepth={2} rounded={false}>
