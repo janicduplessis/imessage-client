@@ -5,11 +5,14 @@
     "url": "https://github.com/janicduplessis/imessage-client.git"
   },
   "main": "babel.server.js",
+  "engines": {
+    "iojs": "^2.3.0"
+  },
   "scripts": {
-    "start": "node ./babel.server",
-    "build": "node ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client.js",
-    "watch-client": "node ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client-watch.js && node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.client-watch.js",
-    "watch": "node ./node_modules/concurrently/src/main.js --kill-others \"npm run watch-client\" \"npm run start\"",
+    "start": "iojs ./babel.server",
+    "build": "iojs ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client.js",
+    "watch-client": "iojs ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client-watch.js && iojs ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.client-watch.js",
+    "watch": "iojs ./node_modules/concurrently/src/main.js --kill-others \"npm run watch-client\" \"npm run start\"",
     "test": "jest"
   },
   "jest": {
