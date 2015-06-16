@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   sendbox: {
     position: 'absolute',
-    left: 0,
+    left: 12,
     right: 12,
     bottom: 0,
   },
