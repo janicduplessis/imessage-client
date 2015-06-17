@@ -67,7 +67,7 @@ export default class MessageStore {
       console.error(err);
       return;
     }
-    const convos = await c.toArray();
+    let convos = await c.toArray();
     let convoId;
     if(convos.length === 0) {
       let res;
@@ -88,10 +88,11 @@ export default class MessageStore {
       convoId = convos[0].id;
     }
 
-    const dbMessage = {
+    let messageDate = new Date();
+    let dbMessage = {
       userId: userId,
       convoId: convoId,
-      date: new Date(),
+      date: messageDate,
       author: message.author,
       text: message.text,
       fromMe: message.fromMe,
@@ -100,6 +101,15 @@ export default class MessageStore {
     try {
       await db.table('messages')
         .insert(dbMessage)
+        .run(this.conn);
+    } catch(err) {
+      console.error(err);
+    }
+
+    try {
+      await db.table('convos')
+        .get(convoId)
+        .update({lastMessageDate: messageDate})
         .run(this.conn);
     } catch(err) {
       console.error(err);
@@ -158,24 +168,11 @@ export default class MessageStore {
             return m('convoId').eq(c('id'));
           })
           .count();
-        let lastMessage = db.table('messages')
-          .orderBy({index: db.desc('date')})
-            .filter(function(m) {
-              return m('convoId').eq(c('id'));
-            })
-          .limit(1)
-          .coerceTo('array')
-          .do(function(ele) {
-            return db.branch(
-              ele.count().gt(0),
-              ele.nth(0),
-              {});
-          });
 
         return {
           id: c('id'),
           name: c('name'),
-          lastMessageDate: lastMessage('date').default(null),
+          lastMessageDate: c('lastMessageDate'),
           messageCount: count,
         };
       })

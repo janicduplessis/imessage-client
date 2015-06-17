@@ -253,6 +253,12 @@ app.get('/api/convos', async (req, res) => {
   } catch(error) {
     console.info('Table convos already exists.');
   }
+  try {
+    await db.table('convos').indexCreate('lastMessageDate').run(conn);
+    console.info('Created convos lastMessageDate index.');
+  } catch(error) {
+    console.info('Convos lastMessageDate index already exists.');
+  }
 
   // Create stores.
   userStore = new UserStore(conn);
