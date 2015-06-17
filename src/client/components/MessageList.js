@@ -27,7 +27,7 @@ class MessageList extends React.Component {
   render() {
     const messages = this.props.messages.map((m, i, self) => {
       let showAuthor = true;
-      let prev = self.get(i - 1);
+      let prev = self.get(i + 1);
       if(prev) {
         showAuthor = prev.get('author') !== m.get('author');
       }

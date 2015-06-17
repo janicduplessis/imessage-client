@@ -7,7 +7,7 @@ import glob from 'glob';
 
 const IMESSAGE_DB = process.env.HOME + '/Library/Messages/chat.db';
 
-const URL_BASE = 'http://localhost:8000';
+const URL_BASE = 'http://imessage.dokku.jdupserver.com';
 const URL_LOGIN = URL_BASE + '/api/login';
 
 let db = null;
@@ -97,11 +97,11 @@ function connect(token) {
   checkNewMessages();
 }
 
-function receiveMessage(message) {
-  console.log('Received message:', message);
+function receiveMessages(messages) {
+  console.log('Received messages:', messages);
   socket.emit('send', {
     type: 'mac',
-    message: message,
+    messages: [messages],
   });
 }
 
@@ -118,16 +118,24 @@ async function checkNewMessages() {
     console.error(err);
     return;
   }
+
+  let checkingForMessages = false;
   setInterval(async () => {
+    if(checkingForMessages) {
+      return;
+    }
+    checkingForMessages = true;
     let newMessages;
     try {
       newMessages = await getNewMessages(latestMessageId);
     } catch(err) {
       console.error(err);
+      checkingForMessages = false;
       return;
     }
     if(newMessages.length > 0) {
       latestMessageId = newMessages[newMessages.length - 1].ROWID;
+      let messages = [];
       for(let m of newMessages) {
         let isFromMe = m.is_from_me === 1;
         let author;
@@ -141,16 +149,18 @@ async function checkNewMessages() {
           }
         }
 
-        let message = {
+        messages.push({
           author: author,
           text: m.text,
           convoName: m.display_name || m.id,
           fromMe: isFromMe,
-        };
-
-        receiveMessage(message);
+        });
       }
+
+      receiveMessages(messages);
     }
+
+    checkingForMessages = false;
   }, 1000);
 }
 
