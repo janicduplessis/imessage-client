@@ -78,6 +78,7 @@ app.io.sockets.on('connection', socketJwt.authorize({
       for(let m of data.messages) {
         messageStore.add(user.id, m);
       }
+      console.log('test');
     }
   });
 
