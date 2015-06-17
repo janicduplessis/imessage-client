@@ -95,7 +95,6 @@ app.io.sockets.on('connection', socketJwt.authorize({
       // Add a mac client to the user group.
       socket.join(user.id + '-mac');
     }
-    console.log('test');
   });
 
   socket.on('disconnect', () => {
