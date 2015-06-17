@@ -57,18 +57,18 @@ export default class MessageStore {
    */
   async add(userId, message) {
     let c;
-
     try {
       c = await db.table('convos')
         .filter(db.row('userId').eq(userId)
           .and(db.row('name').eq(message.convoName)))
         .run(this.conn);
     } catch(err) {
-      console.error(err);
+      console.error('Failed to get convo', err, message.convoName, userId);
       return;
     }
     let convos = await c.toArray();
     let convoId;
+    let messageDate = new Date();
     if(convos.length === 0) {
       let res;
       try {
@@ -76,10 +76,11 @@ export default class MessageStore {
           .insert({
             userId: userId,
             name: message.convoName,
+            lastMessageDate: messageDate,
           })
           .run(this.conn);
       } catch(err) {
-        console.error(err);
+        console.error('Failed to create convo', err);
         return;
       }
       convoId = res.generated_keys[0];
@@ -88,7 +89,6 @@ export default class MessageStore {
       convoId = convos[0].id;
     }
 
-    let messageDate = new Date();
     let dbMessage = {
       userId: userId,
       convoId: convoId,
@@ -103,7 +103,8 @@ export default class MessageStore {
         .insert(dbMessage)
         .run(this.conn);
     } catch(err) {
-      console.error(err);
+      console.error('Failed to create message', err);
+      return;
     }
 
     try {
@@ -112,7 +113,7 @@ export default class MessageStore {
         .update({lastMessageDate: messageDate})
         .run(this.conn);
     } catch(err) {
-      console.error(err);
+      console.error('Failed to update date', err);
     }
   }
 

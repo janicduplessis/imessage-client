@@ -75,8 +75,8 @@ app.io.sockets.on('connection', socketJwt.authorize({
       // notify the web clients via a change handler.
       console.log('Message from mac client', user.username, data.messages);
       // TODO: insert all the messages at the same time.
-      for(let m of data.messages) {
-        messageStore.add(user.id, m);
+      for(let mess of data.messages) {
+        messageStore.add(user.id, mess);
       }
     }
   });

@@ -8,10 +8,12 @@ import glob from 'glob';
 const IMESSAGE_DB = process.env.HOME + '/Library/Messages/chat.db';
 
 const URL_BASE = 'http://imessage.dokku.jdupserver.com';
+//const URL_BASE = 'http://localhost:8000';
 const URL_LOGIN = URL_BASE + '/api/login';
 
 let db = null;
 let socket = null;
+let reconnectInterval = null;
 
 process.on('exit', () => {
   if(db) {
@@ -62,14 +64,14 @@ function login(username, password) {
       return;
     }
 
-    connect(resp.token);
+    createSocket(resp.token);
   })
   .catch((err) => {
     console.error(err);
   });
 }
 
-function connect(token) {
+function createSocket(token) {
   try {
     socket = io.connect(URL_BASE);
   } catch(error) {
@@ -83,10 +85,25 @@ function connect(token) {
 
   socket.on('message', sendMessage);
 
-  socket.on('disconnect', () => {
-    console.log('Disconnected. Trying to reconnect in 10 seconds...');
-    setTimeout(() => connect(token), 10000);
+  socket.on('connect', () => {
+    clearInterval(reconnectInterval);
+    connect(token);
   });
+
+  socket.on('disconnect', () => {
+    console.log('Disconnected. Trying to reconnect...');
+    tryReconnect();
+  });
+}
+
+function tryReconnect() {
+  reconnectInterval = setInterval(() => {
+    socket.connect();
+  }, 5000);
+}
+
+function connect(token) {
+  socket.connect();
 
   socket.emit('authenticate', {token: token});
 
@@ -101,7 +118,7 @@ function receiveMessages(messages) {
   console.log('Received messages:', messages);
   socket.emit('send', {
     type: 'mac',
-    messages: [messages],
+    messages: messages,
   });
 }
 
@@ -119,19 +136,13 @@ async function checkNewMessages() {
     return;
   }
 
-  let checkingForMessages = false;
-  setInterval(async () => {
-    if(checkingForMessages) {
-      return;
-    }
-    // Make sure we only run this once at a time.
-    checkingForMessages = true;
+  clearInterval(checkNewMessages.interval);
+  checkNewMessages.interval = setInterval(async () => {
     let newMessages;
     try {
       newMessages = await getNewMessages(latestMessageId);
     } catch(err) {
       console.error(err);
-      checkingForMessages = false;
       return;
     }
     if(newMessages.length > 0) {
@@ -160,8 +171,6 @@ async function checkNewMessages() {
 
       receiveMessages(messages);
     }
-
-    checkingForMessages = false;
   }, 1000);
 }
 
