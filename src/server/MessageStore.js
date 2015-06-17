@@ -157,11 +157,15 @@ export default class MessageStore {
     return await c.toArray();
   }
 
-  async listConvos(userId) {
+  async listConvos(userId, page = 0, pageSize = 50) {
+    let min = page * pageSize;
+    let max = min + pageSize;
     let c;
     try {
     c = await db.table('convos')
+      .orderBy({index: db.desc('lastMessageDate')})
       .filter(db.row('userId').eq(userId))
+      .slice(min, max)
       .map(function(c) {
         let count = db.table('messages')
           .filter(function(m) {
@@ -176,7 +180,6 @@ export default class MessageStore {
           messageCount: count,
         };
       })
-      .orderBy(db.desc('lastMessageDate'))
       .run(this.conn);
     } catch(error) {
       console.error(error);
