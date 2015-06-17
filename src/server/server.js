@@ -73,8 +73,11 @@ app.io.sockets.on('connection', socketJwt.authorize({
       // If we receive a new message from the mac client we save it to
       // the database. When the database receives new messages it will
       // notify the web clients via a change handler.
-      console.log('Message from mac client', user.username, data.message);
-      messageStore.add(user.id, data.message);
+      console.log('Message from mac client', user.username, data.messages);
+      // TODO: insert all the messages at the same time.
+      for(let m of data.messages) {
+        messageStore.add(user.id, m);
+      }
     }
   });
 
