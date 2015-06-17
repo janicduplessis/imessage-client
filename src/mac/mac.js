@@ -124,6 +124,7 @@ async function checkNewMessages() {
     if(checkingForMessages) {
       return;
     }
+    // Make sure we only run this once at a time.
     checkingForMessages = true;
     let newMessages;
     try {
