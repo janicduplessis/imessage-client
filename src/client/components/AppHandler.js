@@ -4,19 +4,30 @@ import TransitionGroup from 'react/lib/ReactCSSTransitionGroup';
 import {RouteHandler} from 'react-router';
 import NavBar from './NavBar';
 import UserStore from '../stores/UserStore';
+import UIStore from '../stores/UIStore';
 import MessageActions from '../actions/MessageActions';
 import ThemeManager from 'material-ui/lib/styles/theme-manager';
 
 import colors from './colors';
 import '../styles/app.scss';
 
-class AppHandler extends React.Component {
+export default class AppHandler extends React.Component {
+
+  static childContextTypes = {
+    muiTheme: React.PropTypes.object,
+  };
+
+  static contextTypes = {
+    router: React.PropTypes.func,
+  };
 
   constructor(props) {
     super(props);
 
     this.state = {
       user: UserStore.get(),
+      title: UIStore.title(),
+      backButton: UIStore.backButton(),
     };
     this.themeManager = new ThemeManager();
   }
@@ -36,6 +47,7 @@ class AppHandler extends React.Component {
 
   componentDidMount() {
     UserStore.listen(this._userChanged.bind(this));
+    UIStore.listen(this._uiChanged.bind(this));
 
     if(this.state.user) {
       MessageActions.connect();
@@ -43,14 +55,18 @@ class AppHandler extends React.Component {
   }
 
   componentWillUnmount() {
-    UserStore.unlisten(this._userChanged.bind(this));
+    UserStore.unlisten(this._userChanged.bind(this)); // This doesnt work!
+    UIStore.listen(this._uiChanged.bind(this));
   }
 
   render() {
     const name = this.context.router.getCurrentPath();
     return (
       <div className="app vbox">
-        <NavBar user={this.state.user} router={this.context.router}/>
+        <NavBar
+          user={this.state.user}
+          title={this.state.title}
+          showBackButton={this.state.backButton} />
         <div className="vbox" style={styles.content}>
           <TransitionGroup
               transitionName="content-fade"
@@ -78,23 +94,19 @@ class AppHandler extends React.Component {
     });
   }
 
+  _uiChanged() {
+    this.setState({
+      title: UIStore.title(),
+      backButton: UIStore.backButton(),
+    });
+  }
+
   _curRouteClassName() {
     return 'page-' + this.context.router.getRouteAtDepth(1).name;
   }
 }
 
-AppHandler.childContextTypes = {
-  muiTheme: React.PropTypes.object,
-};
-
-AppHandler.contextTypes = {
-  router: React.PropTypes.func,
-};
-
 const styles = StyleSheet.create({
   content: {
-    backgroundColor: '#FBFBFB',
   },
 });
-
-export default AppHandler;

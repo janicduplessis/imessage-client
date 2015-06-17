@@ -32,18 +32,18 @@ export default class UserStore {
   }
 
   async register(username, password, firstName, lastName) {
-    const passwordHash = bcrypt.hashSync(password, 10);
+    let passwordHash = bcrypt.hashSync(password, 10);
 
-    const c = await db.table('users')
+    let c = await db.table('users')
       .filter(db.row('username').eq(username))
       .limit(1)
       .run(this.conn);
-    const res = await c.toArray();
+    let res = await c.toArray();
     if(res.length > 0) {
       return {error: 'ERR_NOT_AVAILABLE'};
     }
 
-    const result = await db.table('users')
+    let result = await db.table('users')
       .insert({
         username: username,
         passwordHash: passwordHash,

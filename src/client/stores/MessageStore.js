@@ -26,6 +26,10 @@ class MessageStore extends Store {
     return this.state.convos;
   }
 
+  convo(id) {
+    return this.state.convos.get(id);
+  }
+
   _handleMessage(message) {
     let newMessages;
     let convo = this._getConvo(message.convoId, message.convoName);

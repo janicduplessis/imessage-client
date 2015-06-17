@@ -80,8 +80,10 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column-reverse',
     flex: 1,
+    flexShrink: 0,
     marginBottom: 72,
     marginRight: 12,
+    marginLeft: 12,
   },
 });
 

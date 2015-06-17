@@ -13,7 +13,7 @@ import UserStore from './UserStore';
 import MessageStore from './MessageStore';
 
 nconf.argv()
-  .env()
+  .env('__')
   .file('user', 'config/server.user.json')
   .file('default', 'config/server.default.json');
 

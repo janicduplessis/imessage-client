@@ -6,7 +6,12 @@ import {
 
 import Storage from '../utils/Storage';
 
-class AccountHandler extends React.Component {
+export default class AccountHandler extends React.Component {
+
+  static contextTypes = {
+    router: React.PropTypes.func.isRequired,
+  };
+
   render() {
     return (
       <div>
@@ -23,5 +28,3 @@ class AccountHandler extends React.Component {
     window.location.reload();
   }
 }
-
-export default AccountHandler;

@@ -7,7 +7,8 @@ import {
 
 import UserActions from '../actions/UserActions';
 
-class LoginHandler extends React.Component {
+export default class LoginHandler extends React.Component {
+
   constructor(props) {
     super(props);
 
@@ -25,6 +26,8 @@ class LoginHandler extends React.Component {
           <TextField
             floatingLabelText="Username"
             type="text"
+            autocorrect="off"
+            autocapitalize="off"
             value={this.state.username}
             onChange={this._usernameChanged.bind(this)} />
           <TextField
@@ -65,5 +68,3 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
 });
-
-export default LoginHandler;

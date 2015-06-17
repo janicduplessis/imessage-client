@@ -14,7 +14,6 @@ module.exports = {
     publicPath: 'dist/',
   },
   plugins: [
-    new webpack.DefinePlugin({'process.env': {NODE_ENV: 'production'}}),
     new webpack.optimize.DedupePlugin(),
     new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.optimize.UglifyJsPlugin(),
@@ -22,7 +21,7 @@ module.exports = {
   module: {
     loaders: [
       {include: /\.json$/, loaders: ['json-loader']},
-      {include: /\.js$/, loaders: ['babel-loader?stage=1&optional=runtime'], exclude: /node_modules/},
+      {include: /\.js$/, loaders: ['babel-loader?stage=0&optional=runtime'], exclude: /node_modules/},
       {test: /\.css$/, loader: 'style!css'},
       {test: /\.scss$/, loader: 'style!css!sass'},
     ],
