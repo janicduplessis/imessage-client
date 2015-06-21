@@ -7,13 +7,16 @@ import glob from 'glob';
 
 const IMESSAGE_DB = process.env.HOME + '/Library/Messages/chat.db';
 
-const URL_BASE = 'http://imessage.dokku.jdupserver.com';
-//const URL_BASE = 'http://localhost:8000';
+//const URL_BASE = 'http://imessage.dokku.jdupserver.com';
+const URL_BASE = 'http://localhost:8000';
 const URL_LOGIN = URL_BASE + '/api/login';
+const URL_LAST_APPLE_ID = URL_BASE + '/api/lastAppleId';
 
 let db = null;
 let socket = null;
 let reconnectInterval = null;
+let latestMessageId = null;
+let token = null;
 
 process.on('exit', () => {
   if(db) {
@@ -44,34 +47,50 @@ function loginPrompt() {
   });
 }
 
-function login(username, password) {
-  fetch(URL_LOGIN, {
-    method: 'post',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      username: username,
-      password: password,
-    }),
-  })
-  .then((resp) => resp.json())
-  .then((resp) => {
-    if(resp.result !== 'OK') {
-      console.log('Invalid username or password. Please try again.');
-      loginPrompt();
-      return;
-    }
+async function send(method, url, params) {
+  let body = null;
+  if(params) {
+    body = JSON.stringify(params);
+  }
+  let headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
+  if(token) {
+    headers['Authorization'] = 'Bearer ' + token;
+  }
 
-    createSocket(resp.token);
+  return await fetch(url, {
+    method: method,
+    body: body,
+    headers: headers,
   })
+  .then(resp => resp.json())
   .catch((err) => {
-    console.error(err);
+    console.error('send error', err);
   });
 }
 
-function createSocket(token) {
+async function login(username, password) {
+  let resp = await send('POST', URL_LOGIN, {
+    username: username,
+    password: password,
+  });
+  if(resp.result !== 'OK') {
+    console.log('Invalid username or password. Please try again.');
+    loginPrompt();
+    return;
+  }
+
+  token = resp.token;
+
+  latestMessageId = await getLastSentMessageId();
+  console.log(latestMessageId);
+
+  createSocket();
+}
+
+async function createSocket() {
   try {
     socket = io.connect(URL_BASE);
   } catch(error) {
@@ -87,7 +106,7 @@ function createSocket(token) {
 
   socket.on('connect', () => {
     clearInterval(reconnectInterval);
-    connect(token);
+    connect();
   });
 
   socket.on('disconnect', () => {
@@ -102,10 +121,10 @@ function tryReconnect() {
   }, 5000);
 }
 
-function connect(token) {
+function connect() {
   socket.connect();
 
-  socket.emit('authenticate', {token: token});
+  socket.emit('authenticate', {token});
 
   console.log('Connected');
 
@@ -115,7 +134,7 @@ function connect(token) {
 }
 
 function receiveMessages(messages) {
-  console.log('Received messages:', messages);
+  console.log(`Received ${messages.length} new messages`);
   socket.emit('send', {
     type: 'mac',
     messages: messages,
@@ -128,12 +147,14 @@ function sendMessage(message) {
 }
 
 async function checkNewMessages() {
-  let latestMessageId;
-  try {
-    latestMessageId = await getLatestMessageId();
-  } catch(err) {
-    console.error(err);
-    return;
+
+  if(!latestMessageId) {
+    try {
+      latestMessageId = await getLastSentMessageId();
+    } catch(err) {
+      console.error(err);
+      return;
+    }
   }
 
   clearInterval(checkNewMessages.interval);
@@ -146,7 +167,7 @@ async function checkNewMessages() {
       return;
     }
     if(newMessages.length > 0) {
-      latestMessageId = newMessages[newMessages.length - 1].ROWID;
+      latestMessageId = newMessages[0].ROWID;
       let messages = [];
       for(let m of newMessages) {
         let isFromMe = m.is_from_me === 1;
@@ -160,9 +181,11 @@ async function checkNewMessages() {
             console.error(err);
           }
         }
-
+        let date = getDateFromTimestamp(m.date);
         messages.push({
+          appleId: m.ROWID,
           author: author,
+          date: date,
           text: m.text,
           convoName: m.display_name || m.id,
           fromMe: isFromMe,
@@ -192,7 +215,10 @@ function getNewMessages(lastMessageId) {
       LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id
       WHERE message.service = 'iMessage'
         AND message.ROWID > (?)
-      ORDER BY message.date DESC`;
+      ORDER BY message.date DESC`
+        + (lastMessageId === 0 ? `
+      LIMIT 500
+      ` : '');
 
     db.serialize(function() {
       db.all(sql, lastMessageId, (err, messages) => {
@@ -204,6 +230,14 @@ function getNewMessages(lastMessageId) {
       });
     });
   });
+}
+
+async function getLastSentMessageId() {
+  let resp = await send('GET', URL_LAST_APPLE_ID);
+  if(resp.error) {
+    throw Error(resp.error);
+  }
+  return resp.id;
 }
 
 function getLatestMessageId() {
@@ -313,5 +347,11 @@ function getNameFromDB(db, phone) {
       });
     });
   });
+}
+
+function getDateFromTimestamp(timestamp) {
+  // Dates are stored in sqlite as a timestamp in seconds since Jan 1st 2001.
+  // 978307200000 = JS timestamp for that date.
+  return new Date((timestamp * 1000) + 978307200000);
 }
 

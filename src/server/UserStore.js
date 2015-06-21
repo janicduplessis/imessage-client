@@ -14,21 +14,20 @@ export default class UserStore {
     let res = await c.toArray();
     let user = res[0];
     if(!user) {
-      return {error: 'ERR_USERNAME'};
+      return [null, 'ERR_USERNAME'];
     }
 
     let ok = bcrypt.compareSync(password, user.passwordHash);
     if(!ok) {
-      return {error: 'ERR_PASSWORD'};
+      return [null, 'ERR_PASSWORD'];
     }
-    return {
-      user: {
+    return [{
         id: user.id,
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
-      },
-    };
+      }, null,
+    ];
   }
 
   async register(username, password, firstName, lastName) {
@@ -40,7 +39,7 @@ export default class UserStore {
       .run(this.conn);
     let res = await c.toArray();
     if(res.length > 0) {
-      return {error: 'ERR_NOT_AVAILABLE'};
+      return [null, 'ERR_NOT_AVAILABLE'];
     }
 
     let result = await db.table('users')
@@ -52,13 +51,12 @@ export default class UserStore {
       })
       .run(this.conn);
 
-    return {
-      user: {
+    return [{
         id: result.generated_keys[0],
         username: username,
         firstName: firstName,
         lastName: lastName,
-      },
-    };
+      }, null,
+    ];
   }
 }

@@ -73,11 +73,8 @@ app.io.sockets.on('connection', socketJwt.authorize({
       // If we receive a new message from the mac client we save it to
       // the database. When the database receives new messages it will
       // notify the web clients via a change handler.
-      console.log('Message from mac client', user.username, data.messages);
-      // TODO: insert all the messages at the same time.
-      for(let mess of data.messages) {
-        messageStore.add(user.id, mess);
-      }
+      console.log(`${data.messages.length} new messages from mac client`, user.username);
+      messageStore.add(user.id, data.messages);
     }
   });
 
@@ -109,7 +106,7 @@ app.io.sockets.on('connection', socketJwt.authorize({
  * Index handler.
  */
 app.get('/', (req, res) => {
-  const webserver = process.env.NODE_ENV === 'production' ? '' : '//localhost:8081';
+  let webserver = process.env.NODE_ENV === 'production' ? '' : '//localhost:8081';
   // TODO: Serve fonts and icons locally
   let output = (
     `<!doctype html>
@@ -136,9 +133,9 @@ app.get('/', (req, res) => {
  * Login handler.
  */
 app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
+  let { username, password } = req.body;
 
-  const {user, error} = await userStore.login(username, password);
+  let [user, error] = await userStore.login(username, password);
   if(error) {
     res.json({
       result: 'INVALID_USER_PASS',
@@ -147,7 +144,7 @@ app.post('/api/login', async (req, res) => {
     return;
   }
 
-  const token = jwt.sign(user, config.server.jwtSecret);
+  let token = jwt.sign(user, config.server.jwtSecret);
 
   res.json({
     result: 'OK',
@@ -164,14 +161,14 @@ app.post('/api/login', async (req, res) => {
  * Register handler.
  */
 app.post('/api/register', async (req, res) => {
-  const {
+  let {
     username,
     password,
     firstName,
     lastName,
   } = req.body;
 
-  const {user, error} = await userStore.register(username, password, firstName, lastName);
+  let [user, error] = await userStore.register(username, password, firstName, lastName);
 
   if(error) {
     res.json({
@@ -181,7 +178,7 @@ app.post('/api/register', async (req, res) => {
     return;
   }
 
-  const token = jwt.sign(user, config.server.jwtSecret);
+  let token = jwt.sign(user, config.server.jwtSecret);
 
   res.json({
     result: 'OK',
@@ -195,12 +192,28 @@ app.post('/api/register', async (req, res) => {
 });
 
 app.get('/api/messages/:convoId', async (req, res) => {
-  const messages = await messageStore.listMessages(req.user.id, req.params.convoId);
+  let messages = await messageStore.listMessages(req.user.id, req.params.convoId);
   res.json(messages);
 });
 
+app.get('/api/lastAppleId', async (req, res) => {
+  try {
+    let message = await messageStore.lastMessage(req.user.id);
+    console.log(message);
+    let id = message ? (message.appleId || 0) : 0;
+    res.json({
+      id,
+    });
+  } catch(err) {
+    console.error(err);
+    res.json({
+      error: err,
+    });
+  }
+});
+
 app.get('/api/convos', async (req, res) => {
-  const convos = await messageStore.listConvos(req.user.id);
+  let convos = await messageStore.listConvos(req.user.id);
   res.json(convos);
 });
 

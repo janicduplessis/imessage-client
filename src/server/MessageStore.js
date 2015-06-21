@@ -55,65 +55,72 @@ export default class MessageStore {
    *
    * @param {Object} message
    */
-  async add(userId, message) {
-    let c;
-    try {
-      c = await db.table('convos')
-        .filter(db.row('userId').eq(userId)
-          .and(db.row('name').eq(message.convoName)))
-        .run(this.conn);
-    } catch(err) {
-      console.error('Failed to get convo', err, message.convoName, userId);
-      return;
+  async add(userId, messages) {
+    // Group messages by convo.
+    let convos = new Map();
+    for(let m of messages) {
+      if(convos.has(m.convoName)) {
+        let c = convos.get(m.convoName);
+        c.messages.push(m);
+        if(m.date > c.lastMessageDate) {
+          c.lastMessageDate = m.date;
+        }
+      } else {
+        convos.set(m.convoName, {
+          messages: [m],
+          lastMessageDate: m.date,
+        });
+      }
     }
-    let convos = await c.toArray();
-    let convoId;
-    let messageDate = new Date();
-    if(convos.length === 0) {
-      let res;
-      try {
-        res = await db.table('convos')
+
+    // Get ids from the db and create the
+    // convo if it doesnt exit yet.
+    // TODO: could batch inserts for convos too.
+    for(let [convoName, convo] of convos) {
+      let c = await db.table('convos')
+        .filter(db.row('userId').eq(userId)
+          .and(db.row('name').eq(convoName)))
+        .run(this.conn);
+
+      let convosArray = await c.toArray();
+      if(convosArray.length === 0) {
+        let res = await db.table('convos')
           .insert({
             userId: userId,
-            name: message.convoName,
-            lastMessageDate: messageDate,
+            name: convoName,
+            lastMessageDate: convo.lastMessageDate,
           })
           .run(this.conn);
-      } catch(err) {
-        console.error('Failed to create convo', err);
-        return;
+        convo.id = res.generated_keys[0];
+      } else {
+        convo.id = convosArray[0].id;
+        await db.table('convos')
+          .get(convo.id)
+          .update({lastMessageDate: convo.lastMessageDate})
+          .run(this.conn);
       }
-      convoId = res.generated_keys[0];
-
-    } else {
-      convoId = convos[0].id;
     }
 
-    let dbMessage = {
-      userId: userId,
-      convoId: convoId,
-      date: messageDate,
-      author: message.author,
-      text: message.text,
-      fromMe: message.fromMe,
-    };
+    // Insert messages
+    let dbMessages = messages.map((m => {
+      return {
+        userId: userId,
+        convoId: convos.get(m.convoName).id,
+        appleId: m.appleId,
+        date: m.date,
+        author: m.author,
+        text: m.text,
+        fromMe: m.fromMe,
+      };
+    }));
 
     try {
       await db.table('messages')
-        .insert(dbMessage)
+        .insert(dbMessages)
         .run(this.conn);
     } catch(err) {
       console.error('Failed to create message', err);
       return;
-    }
-
-    try {
-      await db.table('convos')
-        .get(convoId)
-        .update({lastMessageDate: messageDate})
-        .run(this.conn);
-    } catch(err) {
-      console.error('Failed to update date', err);
     }
   }
 
@@ -156,6 +163,21 @@ export default class MessageStore {
     }
 
     return await c.toArray();
+  }
+
+  async lastMessage(userId) {
+    try {
+      let c = await db.table('messages')
+        .orderBy({index: db.desc('date')})
+        .filter(db.row('userId').eq(userId))
+        .limit(1)
+        .run(this.conn);
+
+      let res = await c.toArray();
+      return res[0];
+    } catch(err) {
+      console.error(err);
+    }
   }
 
   async listConvos(userId, page = 0, pageSize = 50) {
