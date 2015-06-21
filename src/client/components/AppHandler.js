@@ -1,21 +1,26 @@
 import React from 'react';
 import StyleSheet from 'react-style';
 import TransitionGroup from 'react/lib/ReactCSSTransitionGroup';
-import {RouteHandler} from 'react-router';
-import NavBar from './NavBar';
-import UserStore from '../stores/UserStore';
-import UIStore from '../stores/UIStore';
-import MessageActions from '../actions/MessageActions';
 import ThemeManager from 'material-ui/lib/styles/theme-manager';
+import {branch} from 'baobab-react/decorators';
+import {RouteHandler} from 'react-router';
 
+import NavBar from './NavBar';
+import MessageActions from '../actions/MessageActions';
 import colors from './colors';
+
 import '../styles/app.scss';
 
+@branch({
+  cursors: {
+    user: ['user'],
+  },
+})
 export default class AppHandler extends React.Component {
 
   static childContextTypes = {
     muiTheme: React.PropTypes.object,
-  };
+  }
 
   static contextTypes = {
     router: React.PropTypes.func,
@@ -24,11 +29,6 @@ export default class AppHandler extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      user: UserStore.get(),
-      title: UIStore.title(),
-      backButton: UIStore.backButton(),
-    };
     this.themeManager = new ThemeManager();
   }
 
@@ -46,27 +46,29 @@ export default class AppHandler extends React.Component {
   }
 
   componentDidMount() {
-    UserStore.listen(this._userChanged.bind(this));
-    UIStore.listen(this._uiChanged.bind(this));
-
-    if(this.state.user) {
+    if(this.props.user) {
       MessageActions.connect();
     }
   }
 
-  componentWillUnmount() {
-    UserStore.unlisten(this._userChanged.bind(this)); // This doesnt work!
-    UIStore.listen(this._uiChanged.bind(this));
+  componentWillReceiveProps(props) {
+    let {router} = this.context;
+    let {user} = this.props;
+    if(props.user !== user) {
+      if(user) {
+        MessageActions.connect();
+        router.replaceWith('/chat');
+      } else {
+        router.replaceWith('/login');
+      }
+    }
   }
 
   render() {
-    const name = this.context.router.getCurrentPath();
+    let name = this.context.router.getCurrentPath();
     return (
       <div className="app vbox">
-        <NavBar
-          user={this.state.user}
-          title={this.state.title}
-          showBackButton={this.state.backButton} />
+        <NavBar />
         <div className="vbox" style={styles.content}>
           <TransitionGroup
               transitionName="content-fade"
@@ -77,28 +79,6 @@ export default class AppHandler extends React.Component {
         </div>
       </div>
     );
-  }
-
-  _userChanged() {
-    let { router } = this.context;
-    let user = UserStore.get();
-    if(user !== null) {
-      MessageActions.connect();
-      router.replaceWith('/chat');
-    } else {
-      router.replaceWith('/login');
-    }
-
-    this.setState({
-      user: user,
-    });
-  }
-
-  _uiChanged() {
-    this.setState({
-      title: UIStore.title(),
-      backButton: UIStore.backButton(),
-    });
   }
 
   _curRouteClassName() {

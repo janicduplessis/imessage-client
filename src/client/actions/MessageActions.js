@@ -1,39 +1,45 @@
-import { Flux, Actions } from '../flux';
-import ApiUtils from '../utils/ApiUtils';
+import R from 'ramda';
 
-class MessageActions extends Actions {
-  send(message) {
-    ApiUtils.sendMessage(message);
+import state from '../state';
+import ApiUtils from '../utils/ApiUtils';
+import Optimist from '../utils/Optimist';
+
+export default {
+  async send(message) {
+    let ref = Optimist.create();
     this.receiveMessage(message);
-  }
+    await ApiUtils.sendMessage(message);
+
+  },
 
   async listMessages(convoId) {
     try {
-      const messages = await ApiUtils.listMessages(convoId);
-      return {convoId, messages};
+      let messages = await ApiUtils.listMessages(convoId);
+      state.set(['messages', 'models'],
+        R.merge(state.get(['messages', 'models']), messages));
     } catch(err) {
       console.error(err);
     }
-  }
+  },
 
   async listConvos() {
     try {
-      return await ApiUtils.listConvos();
+      let convos = await ApiUtils.listConvos();
+      state.set(['convos', 'models'],
+        R.merge(state.get(['convos', 'models']), convos));
     } catch(err) {
       console.error(err);
     }
-  }
+  },
 
   receiveMessage(message) {
-    return message;
-  }
+    state.set(['messages', 'models', message.id], message);
+  },
 
   connect() {
     ApiUtils.connect();
     ApiUtils.onMessage((message) => {
       this.receiveMessage(message);
     });
-  }
-}
-
-export default Flux.createActions('message', MessageActions);
+  },
+};

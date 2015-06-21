@@ -1,22 +1,41 @@
-import { Flux, Actions } from '../flux';
+import state from '../state';
 import ApiUtils from '../utils/ApiUtils';
+import Storage from '../utils/Storage';
 
-class UserActions extends Actions {
+export default {
   async login(loginInfo) {
     try {
-      return await ApiUtils.login(loginInfo);
+      let resp = await ApiUtils.login(loginInfo);
+      this._setUserState(resp);
     } catch(err) {
       console.error(err);
     }
-  }
+  },
 
   async register(registerInfo) {
     try {
-      return await ApiUtils.register(registerInfo);
+      let resp = await ApiUtils.register(registerInfo);
+      this._setUserState(resp);
     } catch(err) {
       console.error(err);
     }
-  }
-}
+  },
 
-export default Flux.createActions('user', UserActions);
+  _setUserState(resp) {
+    if(resp.result === 'OK') {
+      Storage.setItem('user', resp.user);
+      state.set(['user'], {
+        logged: true,
+        model: resp.user,
+        loading: false,
+      });
+    } else {
+      Storage.setItem('user', null);
+      state.set(['user'], {
+        logged: false,
+        model: null,
+        loading: false,
+      });
+    }
+  },
+};

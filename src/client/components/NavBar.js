@@ -9,16 +9,17 @@ import {
   Tabs,
   Tab,
 } from 'material-ui';
+import {branch} from 'baobab-react/decorators';
 
 import colors from './colors';
 
+@branch({
+  cursors: {
+    user: ['user', 'model'],
+    navbar: ['navbar'],
+  },
+})
 export default class NavBar extends React.Component {
-
-  static propTypes = {
-    user: React.PropTypes.object,
-    title: React.PropTypes.string,
-    showBackButton: React.PropTypes.bool,
-  };
 
   static contextTypes = {
     router: React.PropTypes.func.isRequired,
@@ -27,7 +28,7 @@ export default class NavBar extends React.Component {
   render() {
     let user = this.props.user;
     let tabs = [];
-    if(user === null) {
+    if(!user) {
       tabs.push(
         <Tab
           key="10"
@@ -60,7 +61,7 @@ export default class NavBar extends React.Component {
     }
 
     let selected = tabs.findIndex(t => this.context.router.getCurrentPathname().indexOf(t.props.route) >= 0);
-    let backButton = this.props.showBackButton ? (
+    let backButton = this.props.navbar.backButton ? (
       <IconButton
         style={styles.backButton}
         iconStyle={styles.backIcon}
@@ -73,7 +74,7 @@ export default class NavBar extends React.Component {
         <Toolbar style={styles.toolbar}>
           <ToolbarGroup style={styles.content}>
             {backButton}
-            <ToolbarTitle style={styles.title} text={this.props.title} />
+            <ToolbarTitle style={styles.title} text={this.props.navbar.title || 'iMessage Web'} />
             <Tabs style={styles.tabs} initialSelectedIndex={selected} tabWidth={150}>
               {tabs}
             </Tabs>

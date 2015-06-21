@@ -1,14 +1,12 @@
-import { Flux, Actions } from '../flux';
+import state from '../state';
 
-class UIActions extends Actions {
+export default {
 
   title(title) {
-    return title;
-  }
+    state.set(['navbar', 'title'], title);
+  },
 
   backButton(visible) {
-    return visible;
-  }
-}
-
-export default Flux.createActions('ui', UIActions);
+    state.set(['navbar', 'backButton'], visible);
+  },
+};
