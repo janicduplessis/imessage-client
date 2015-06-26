@@ -5,7 +5,7 @@ import AppHandler from './AppHandler';
 import state from '../state';
 
 @root(state)
-export default class Root extends React.Component {
+export default class RootHandler extends React.Component {
   render() {
     return <AppHandler />;
   }

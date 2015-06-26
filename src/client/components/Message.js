@@ -4,7 +4,7 @@ import {
   Paper,
 } from 'material-ui';
 
-import colors from './colors';
+import colors from '../utils/colors';
 import UserUtils from '../utils/UserUtils';
 
 class Message extends React.Component {

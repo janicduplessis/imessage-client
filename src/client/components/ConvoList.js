@@ -4,7 +4,7 @@ import {
   Paper,
 } from 'material-ui';
 
-import colors from './colors';
+import colors from '../utils/colors';
 
 class ConvoList extends React.Component {
 

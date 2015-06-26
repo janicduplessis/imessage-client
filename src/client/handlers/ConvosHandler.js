@@ -2,7 +2,7 @@ import React from 'react';
 import StyleSheet from 'react-style';
 import {branch} from 'baobab-react/decorators';
 
-import ConvoList from './ConvoList';
+import ConvoList from '../components/ConvoList';
 import MessageActions from '../actions/MessageActions';
 
 @branch({

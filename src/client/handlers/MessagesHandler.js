@@ -2,8 +2,8 @@ import React from 'react';
 import StyleSheet from 'react-style';
 import {branch} from 'baobab-react/decorators';
 
-import MessageList from './MessageList';
-import SendBox from './SendBox';
+import MessageList from '../components/MessageList';
+import SendBox from '../components/SendBox';
 import MessageActions from '../actions/MessageActions';
 import UIActions from '../actions/UIActions';
 
@@ -19,7 +19,7 @@ class MessagesHandler extends React.Component {
   }
 
   componentDidMount() {
-    let convo = this.props.convo;
+    let {convo} = this.props;
     if(convo) {
       UIActions.title(convo.name);
     }

@@ -1,15 +1,16 @@
 import React from 'react';
 import {Route, Redirect, DefaultRoute} from 'react-router';
-import Root from './components/Root';
-import LoginHandler from './components/LoginHandler';
-import RegisterHandler from './components/RegisterHandler';
-import AccountHandler from './components/AccountHandler';
-import ChatHandler from './components/ChatHandler';
-import MessagesHandler from './components/MessagesHandler';
-import ConvosHandler from './components/ConvosHandler';
+
+import RootHandler from './handlers/RootHandler';
+import LoginHandler from './handlers/LoginHandler';
+import RegisterHandler from './handlers/RegisterHandler';
+import AccountHandler from './handlers/AccountHandler';
+import ChatHandler from './handlers/ChatHandler';
+import MessagesHandler from './handlers/MessagesHandler';
+import ConvosHandler from './handlers/ConvosHandler';
 
 export default (
-  <Route name="app" path="/" handler={Root}>
+  <Route name="app" path="/" handler={RootHandler}>
     <Route name="login" path="/login" handler={LoginHandler} />
     <Route name="register" path="/register" handler={RegisterHandler} />
     <Route name="account" path="/account" handler={AccountHandler} />

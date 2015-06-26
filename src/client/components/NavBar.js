@@ -11,7 +11,7 @@ import {
 } from 'material-ui';
 import {branch} from 'baobab-react/decorators';
 
-import colors from './colors';
+import colors from '../utils/colors';
 
 @branch({
   cursors: {

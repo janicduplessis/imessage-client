@@ -1,7 +1,5 @@
 import React from 'react';
-import StyleSheet from 'react-style';
 import {RouteHandler} from 'react-router';
-
 
 export default class ChatHandler extends React.Component {
 
@@ -23,9 +21,3 @@ export default class ChatHandler extends React.Component {
     );
   }
 }
-
-
-
-const styles = StyleSheet.create({
-
-});

@@ -5,9 +5,9 @@ import ThemeManager from 'material-ui/lib/styles/theme-manager';
 import {branch} from 'baobab-react/decorators';
 import {RouteHandler} from 'react-router';
 
-import NavBar from './NavBar';
+import NavBar from '../components/NavBar';
 import MessageActions from '../actions/MessageActions';
-import colors from './colors';
+import colors from '../utils/colors';
 
 import '../styles/app.scss';
 
