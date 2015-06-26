@@ -39,8 +39,10 @@ export default new Baobab({
         messages: ['messages', 'models'],
       },
       get(state) {
-        return state.id ?
-          R.whereEq({convoId: state.id})(state.messages) : [];
+        if(!state.id) {
+          return [];
+        }
+        return R.filter(m => m.convoId === state.id, R.values(state.messages));
       },
     },
     visibleConvos: {
