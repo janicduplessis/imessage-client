@@ -20,7 +20,7 @@ export default class ConvosHandler extends React.Component {
     super(props);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     MessageActions.listConvos();
   }
 

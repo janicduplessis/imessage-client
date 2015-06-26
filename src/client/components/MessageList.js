@@ -27,17 +27,17 @@ class MessageList extends React.Component {
   render() {
     const messages = this.props.messages.map((m, i, self) => {
       let showAuthor = true;
-      let prev = self.get(i + 1);
+      let prev = self[i + 1];
       if(prev) {
-        showAuthor = prev.get('author') !== m.get('author');
+        showAuthor = prev.author !== m.author;
       }
       return (
         <Message
-          author={m.get('author')}
+          author={m.author}
           showAuthor={showAuthor}
-          text={m.get('text')}
-          fromMe={m.get('fromMe')}
-          key={m.get('id')} />
+          text={m.text}
+          fromMe={m.fromMe}
+          key={m.id} />
       );
     });
     return (
@@ -56,7 +56,7 @@ class MessageList extends React.Component {
 }
 
 MessageList.propTypes = {
-  messages: React.PropTypes.object.isRequired, //TODO: use immutablejs prop types.
+  messages: React.PropTypes.array.isRequired,
 };
 
 const styles = StyleSheet.create({

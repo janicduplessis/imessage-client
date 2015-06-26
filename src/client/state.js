@@ -51,5 +51,13 @@ export default new Baobab({
         return R.values(state.convos);
       },
     },
+    currentConvo: {
+      cursors: {
+        convos: ['convos', 'models'],
+      },
+      get(state, id) {
+        return state.convos[id];
+      },
+    },
   },
 });

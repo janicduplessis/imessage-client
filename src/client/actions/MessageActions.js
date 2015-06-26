@@ -2,7 +2,7 @@ import R from 'ramda';
 
 import state from '../state';
 import ApiUtils from '../utils/ApiUtils';
-import Optimist from '../utils/Optimist';
+//import Optimist from '../utils/Optimist';
 
 export default {
   async send(message) {
@@ -32,6 +32,11 @@ export default {
 
   receiveMessage(message) {
     state.set(['messages', 'models', message.id], message);
+  },
+
+  setCurrentConvo(convoId) {
+    this.listMessages(convoId);
+    state.set(['currentConvoId'], convoId);
   },
 
   connect() {

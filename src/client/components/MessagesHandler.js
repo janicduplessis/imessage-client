@@ -1,37 +1,33 @@
 import React from 'react';
 import StyleSheet from 'react-style';
+import {branch} from 'baobab-react/decorators';
 
 import MessageList from './MessageList';
 import SendBox from './SendBox';
-import MessageStore from '../stores/MessageStore';
 import MessageActions from '../actions/MessageActions';
 import UIActions from '../actions/UIActions';
 
+@branch({
+  facets: {
+    messages: 'visibleMessages',
+    convo: 'currentConvo',
+  },
+})
 class MessagesHandler extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      messages: MessageStore.listMessages(this.props.params.id),
-    };
-
-    this._messageStoreListener = this._onStoreChange.bind(this);
   }
 
   componentDidMount() {
-    MessageStore.listen(this._messageStoreListener);
-
-    let convo = MessageStore.convo(this.props.params.id);
+    let convo = this.props.convo;
     if(convo) {
-      UIActions.title(convo.get('name'));
+      UIActions.title(convo.name);
     }
 
     UIActions.backButton(true);
   }
 
   componentWillUnmount() {
-    MessageStore.unlisten(this._messageStoreListener);
-
     UIActions.title(null);
     UIActions.backButton(false);
   }
@@ -39,27 +35,21 @@ class MessagesHandler extends React.Component {
   render() {
     return (
       <div style={styles.container}>
-        <MessageList messages={this.state.messages} />
+        <MessageList messages={this.props.messages} />
         <SendBox style={styles.sendbox} onMessage={this._sendMessage.bind(this)} />
       </div>
     );
   }
 
   _sendMessage(message) {
-    let convo = MessageStore.convo(this.props.params.id);
+    let convo = this.props.convo;
     MessageActions.send({
       id: 'tmp_' + Math.random(),
       author: 'me',
       text: message,
-      convoName: convo.get('name'),
-      convoId: convo.get('id'),
+      convoName: convo.name,
+      convoId: convo.id,
       fromMe: true,
-    });
-  }
-
-  _onStoreChange() {
-    this.setState({
-      messages: MessageStore.listMessages(this.props.params.id),
     });
   }
 }
