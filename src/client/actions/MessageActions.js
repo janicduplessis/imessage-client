@@ -6,10 +6,8 @@ import Optimist from '../utils/Optimist';
 
 export default {
   async send(message) {
-    let ref = Optimist.create();
-    this.receiveMessage(message);
-    await ApiUtils.sendMessage(message);
-
+    //this.receiveMessage(message);
+    ApiUtils.sendMessage(message);
   },
 
   async listMessages(convoId) {

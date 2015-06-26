@@ -10,17 +10,17 @@ class ConvoList extends React.Component {
 
   render() {
     let convos = this.props.convos.map((c) => {
-      let selected = this.props.curConvo && c.get('id') === this.props.curConvo.get('id');
+      let selected = this.props.curConvo && c.id === this.props.curConvo.id;
       let convStyles = selected ? [styles.convo, styles.selectedConvo] : [styles.convo];
       return (
         <div
           styles={convStyles}
-          onClick={this._onConvoChanged.bind(this, c.get('id'))}
-          key={c.get('id')}>
-            {c.get('name')}
+          onClick={this._onConvoChanged.bind(this, c.id)}
+          key={c.id}>
+            {c.name}
         </div>
       );
-    }).toList();
+    });
 
     return (
       <div styles={[styles.scroll]}>
@@ -39,7 +39,7 @@ class ConvoList extends React.Component {
 }
 
 ConvoList.propTypes = {
-  convos: React.PropTypes.object.isRequired, //TODO: use immutablejs prop types.
+  convos: React.PropTypes.array,
   curConvo: React.PropTypes.object,
   onConvoChanged: React.PropTypes.func,
 };

@@ -43,5 +43,13 @@ export default new Baobab({
           R.whereEq({convoId: state.id})(state.messages) : [];
       },
     },
+    visibleConvos: {
+      cursors: {
+        convos: ['convos', 'models'],
+      },
+      get(state) {
+        return R.values(state.convos);
+      },
+    },
   },
 });

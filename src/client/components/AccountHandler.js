@@ -1,5 +1,6 @@
+/* @flow */
+
 import React from 'react';
-import StyleSheet from 'react-style';
 import {
   RaisedButton,
 } from 'material-ui';
