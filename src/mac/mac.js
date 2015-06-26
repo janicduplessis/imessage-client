@@ -90,7 +90,7 @@ async function login(username, password) {
   createSocket();
 }
 
-async function createSocket() {
+function createSocket() {
   try {
     socket = io.connect(URL_BASE);
   } catch(error) {
@@ -187,7 +187,7 @@ async function checkNewMessages() {
           author: author,
           date: date,
           text: m.text,
-          convoName: m.display_name || m.id,
+          convoName: m.display_name || author,
           fromMe: isFromMe,
         });
       }
