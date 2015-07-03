@@ -1,5 +1,11 @@
 # imessage-client
 
+Web application for iMessage
+
+It uses a mac app to communicate with the server and send new messages as they are received. The server can also communicate with the mac app to send messages to iMessage.
+
+Warning, this is not ready for use at all and is missing crucial security features. It is meant mainly as a tech demo and fun project.
+
 ## Installation
 
 Both the server and mac client use [iojs](https://iojs.org/en/index.html). It is also possible to use node instead by modifying the scripts in package.json
